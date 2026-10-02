@@ -79,8 +79,15 @@ async function logout() {
 
 function enterDashboard(user, dailyBonus) {
   currentBananas = user.bananas;
+  currentUserId = user.id;
+  isOwnerUser = user.isOwner;
   document.getElementById('display-username').textContent = user.username;
   document.getElementById('display-bananas').textContent = '🍌 ' + user.bananas.toLocaleString();
+
+  // Show admin tab for owner
+  if (user.isOwner) {
+    document.getElementById('admin-tab').style.display = 'inline-block';
+  }
 
   if (dailyBonus > 0) {
     document.getElementById('bonus-amount').textContent = dailyBonus.toLocaleString();
@@ -107,6 +114,8 @@ function switchTab(tab) {
   if (tab === 'inventory') loadInventory();
   if (tab === 'craft') loadCrafting();
   if (tab === 'trade') loadTrading();
+  if (tab === 'chat') loadChat();
+  if (tab === 'admin') loadAdmin();
 }
 
 // Rarity display helpers
@@ -364,6 +373,238 @@ async function loadInventory() {
     console.error('Failed to load inventory', err);
   }
 }
+
+// ===== CHAT =====
+let socket = null;
+let currentRoom = 'main';
+let isOwnerUser = false;
+
+function initChat() {
+  if (socket) return;
+  socket = io();
+
+  socket.on('chat', (data) => {
+    if (data.room !== currentRoom) return;
+    appendChatMessage(data);
+  });
+
+  socket.on('system', (data) => {
+    const el = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'chat-msg system-msg';
+    div.textContent = data.message;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+  });
+
+  socket.on('character_share', (data) => {
+    const el = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'chat-msg share-msg';
+    const badgeHtml = (data.badges || []).map(b =>
+      `<span class="msg-badge" style="background:${b.color};color:#000;">${b.name}</span>`
+    ).join('');
+    div.innerHTML = `
+      <span class="msg-user ${data.isOwner ? 'msg-owner' : ''}">${data.username}</span>
+      ${badgeHtml}
+      shared: ${RARITY_EMOJIS[data.character.rarity]} <span class="rarity-${data.character.rarity}" style="font-weight:600;">${data.character.name}</span>
+    `;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+  });
+
+  socket.on('online_users', (users) => {
+    document.getElementById('online-count').textContent = `${users.length} online`;
+  });
+}
+
+function appendChatMessage(data) {
+  const el = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg';
+  const badgeHtml = (data.badges || []).map(b =>
+    `<span class="msg-badge" style="background:${b.color};color:#000;">${b.name}</span>`
+  ).join('');
+  div.innerHTML = `
+    <span class="msg-user ${data.isOwner ? 'msg-owner' : ''}">${data.username}</span>
+    ${badgeHtml}
+    <span class="msg-text">${escapeHtml(data.message)}</span>
+  `;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg || !socket) return;
+  socket.emit('message', { message: msg, room: currentRoom });
+  input.value = '';
+}
+
+function switchRoom(room) {
+  currentRoom = room;
+  document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.room-btn[onclick="switchRoom('${room}')"]`).classList.add('active');
+  document.getElementById('chat-messages').innerHTML = '';
+}
+
+function loadChat() {
+  initChat();
+  if (socket) socket.emit('get_online');
+  if (isOwnerUser) {
+    document.getElementById('admin-room-btn').style.display = 'inline-block';
+  }
+}
+
+// ===== ADMIN =====
+async function loadAdmin() {
+  loadAdminUsers();
+  loadAdminBadges();
+}
+
+async function loadAdminUsers() {
+  try {
+    const res = await fetch('/api/admin/users');
+    if (!res.ok) return;
+    const users = await res.json();
+
+    // Populate banana user select
+    const bananaSelect = document.getElementById('admin-banana-user');
+    const badgeUserSelect = document.getElementById('admin-badge-user');
+    const opts = users.map(u => `<option value="${u.id}">${u.username} (🍌${u.bananas})</option>`).join('');
+    bananaSelect.innerHTML = '<option value="">Select player...</option>' + opts;
+    badgeUserSelect.innerHTML = '<option value="">Select player...</option>' + opts;
+
+    // Users list
+    const listEl = document.getElementById('admin-users-list');
+    listEl.innerHTML = users.map(u => `
+      <div class="admin-user-row">
+        <div class="admin-user-info">
+          <strong>${u.username}</strong> ${u.is_owner ? '👑' : ''}
+          <span class="banana-inline">🍌 ${u.bananas.toLocaleString()}</span>
+          ${u.banned ? ' <span style="color:#ef4444;">BANNED</span>' : ''}
+          ${u.muted ? ' <span style="color:#f59e0b;">MUTED</span>' : ''}
+        </div>
+        ${!u.is_owner ? `
+        <div class="admin-user-actions">
+          <button onclick="adminToggleMute(${u.id}, ${u.muted ? 0 : 1})">${u.muted ? 'Unmute' : 'Mute'}</button>
+          <button onclick="adminToggleBan(${u.id}, ${u.banned ? 0 : 1})" style="background:${u.banned ? '#10b981' : '#ef4444'};color:#fff;">${u.banned ? 'Unban' : 'Ban'}</button>
+        </div>` : ''}
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Failed to load admin users', err);
+  }
+}
+
+async function loadAdminBadges() {
+  try {
+    const res = await fetch('/api/admin/badges');
+    if (!res.ok) return;
+    const badges = await res.json();
+    const select = document.getElementById('admin-badge-select');
+    select.innerHTML = '<option value="">Select badge...</option>' +
+      badges.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+  } catch (err) {}
+}
+
+async function adminSetBananas() {
+  const userId = document.getElementById('admin-banana-user').value;
+  const amount = parseInt(document.getElementById('admin-banana-amount').value);
+  if (!userId || isNaN(amount)) return alert('Select a player and enter an amount');
+
+  const res = await fetch('/api/admin/bananas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: parseInt(userId), amount })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    alert(`${data.user.username} now has 🍌 ${data.user.bananas.toLocaleString()}`);
+    loadAdminUsers();
+    // Update own display if self
+    if (parseInt(userId) === currentUserId) {
+      currentBananas = data.user.bananas;
+      document.getElementById('display-bananas').textContent = '🍌 ' + currentBananas.toLocaleString();
+    }
+  } else {
+    alert(data.error);
+  }
+}
+
+async function adminCreateInvite() {
+  const code = document.getElementById('admin-invite-input').value.trim();
+  if (!code) return;
+
+  const res = await fetch('/api/admin/invite-codes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ codes: [code] })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    document.getElementById('admin-invite-result').textContent = `Created: ${data.created.join(', ')}`;
+    document.getElementById('admin-invite-input').value = '';
+  }
+}
+
+async function adminCreateBadge() {
+  const name = document.getElementById('admin-badge-name').value.trim();
+  const color = document.getElementById('admin-badge-color').value;
+  if (!name) return;
+
+  const res = await fetch('/api/admin/badges', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, color })
+  });
+  if (res.ok) {
+    document.getElementById('admin-badge-name').value = '';
+    loadAdminBadges();
+    alert('Badge created!');
+  }
+}
+
+async function adminAssignBadge() {
+  const userId = document.getElementById('admin-badge-user').value;
+  const badgeId = document.getElementById('admin-badge-select').value;
+  if (!userId || !badgeId) return alert('Select a player and a badge');
+
+  const res = await fetch('/api/admin/badges/assign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: parseInt(userId), badgeId: parseInt(badgeId) })
+  });
+  if (res.ok) alert('Badge assigned!');
+}
+
+async function adminToggleMute(userId, muted) {
+  await fetch('/api/admin/mute', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, muted })
+  });
+  loadAdminUsers();
+}
+
+async function adminToggleBan(userId, banned) {
+  if (banned && !confirm('Ban this player?')) return;
+  await fetch('/api/admin/ban', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, banned })
+  });
+  loadAdminUsers();
+}
+
+let currentUserId = null;
 
 // ===== CRAFTING =====
 async function loadCrafting() {

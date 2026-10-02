@@ -1,20 +1,30 @@
 const express = require('express');
 const session = require('express-session');
+const http = require('http');
+const { Server } = require('socket.io');
 const path = require('path');
 const { initialize } = require('./server/db/init');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 const PORT = process.env.PORT || 3000;
+
+// Session middleware (shared between Express and Socket.io)
+const sessionMiddleware = session({
+  secret: 'bananaet-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
+});
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(session({
-  secret: 'bananaet-secret-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 } // 7 days
-}));
+app.use(sessionMiddleware);
+
+// Share session with Socket.io
+io.engine.use(sessionMiddleware);
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -32,9 +42,12 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Initialize database (async), then start server
+// Initialize database, setup chat, start server
 initialize().then(() => {
-  app.listen(PORT, () => {
+  const { setupChat } = require('./server/routes/chat');
+  setupChat(io);
+
+  server.listen(PORT, () => {
     console.log(`Bananalet running at http://localhost:${PORT}`);
   });
 }).catch(err => {

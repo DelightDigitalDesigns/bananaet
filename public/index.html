@@ -46,6 +46,8 @@
         <button class="tab" onclick="switchTab('inventory')">Collection</button>
         <button class="tab" onclick="switchTab('craft')">Craft</button>
         <button class="tab" onclick="switchTab('trade')">Trade</button>
+        <button class="tab" onclick="switchTab('chat')">Chat</button>
+        <button class="tab" id="admin-tab" style="display:none;" onclick="switchTab('admin')">Admin</button>
       </nav>
       <main>
         <div id="daily-bonus-banner" class="bonus-banner" style="display:none;">
@@ -69,6 +71,70 @@
           <p style="color:#888;margin-bottom:1rem;">Combine duplicates to craft rarer characters.</p>
           <div id="craft-recipes" class="craft-recipes"></div>
           <div id="craft-result" class="craft-result" style="display:none;"></div>
+        </div>
+
+        <!-- Chat Tab -->
+        <div id="tab-chat" class="tab-content">
+          <div class="chat-container">
+            <div class="chat-header">
+              <div class="chat-rooms">
+                <button class="room-btn active" onclick="switchRoom('main')">Main Room</button>
+                <button class="room-btn" id="admin-room-btn" style="display:none;" onclick="switchRoom('admin')">Admin Room</button>
+              </div>
+              <div id="online-count" class="online-count"></div>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input-bar">
+              <input type="text" id="chat-input" placeholder="Type a message..." maxlength="500" autocomplete="off" onkeydown="if(event.key==='Enter')sendChat()">
+              <button onclick="sendChat()">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Tab -->
+        <div id="tab-admin" class="tab-content">
+          <h2 style="margin:1rem 0 0.5rem;">Admin Panel</h2>
+
+          <div class="admin-section">
+            <h3>Give Bananas</h3>
+            <div class="admin-form">
+              <select id="admin-banana-user"><option value="">Select player...</option></select>
+              <input type="number" id="admin-banana-amount" placeholder="Amount" value="50000">
+              <button onclick="adminSetBananas()">Set Bananas</button>
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <h3>Generate Invite Codes</h3>
+            <div class="admin-form">
+              <input type="text" id="admin-invite-input" placeholder="Code (e.g. banana2)">
+              <button onclick="adminCreateInvite()">Create Code</button>
+            </div>
+            <div id="admin-invite-result" style="margin-top:0.5rem;color:#10b981;"></div>
+          </div>
+
+          <div class="admin-section">
+            <h3>Create Badge</h3>
+            <div class="admin-form">
+              <input type="text" id="admin-badge-name" placeholder="Badge name">
+              <input type="color" id="admin-badge-color" value="#FFD700">
+              <button onclick="adminCreateBadge()">Create</button>
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <h3>Assign Badge</h3>
+            <div class="admin-form">
+              <select id="admin-badge-user"><option value="">Select player...</option></select>
+              <select id="admin-badge-select"><option value="">Select badge...</option></select>
+              <button onclick="adminAssignBadge()">Assign</button>
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <h3>Players</h3>
+            <div id="admin-users-list" class="admin-users-list"></div>
+          </div>
         </div>
 
         <!-- Trade Tab -->
@@ -120,6 +186,7 @@
     </div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>
