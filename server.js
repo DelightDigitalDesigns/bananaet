@@ -1,0 +1,35 @@
+const express = require('express');
+const session = require('express-session');
+const path = require('path');
+const { initialize } = require('./server/db/init');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Initialize database
+initialize();
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: 'bananaet-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 } // 7 days
+}));
+
+// Static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API routes
+app.use('/api/auth', require('./server/routes/auth'));
+
+// Serve index for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Bananaet running at http://localhost:${PORT}`);
+});
