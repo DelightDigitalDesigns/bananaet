@@ -162,17 +162,26 @@ async function loadPacks() {
   }
 }
 
+let pendingReveal = null;
+
 async function openPackUI(packId) {
   const overlay = document.getElementById('pack-overlay');
   const openingText = document.getElementById('pack-opening-text');
+  const swipePrompt = document.getElementById('swipe-prompt');
+  const swipeCard = document.getElementById('swipe-card');
   const revealCard = document.getElementById('reveal-card');
   const closeBtn = document.getElementById('reveal-close');
 
-  // Show overlay with loading state
+  // Reset state
   overlay.style.display = 'flex';
   openingText.style.display = 'block';
+  openingText.textContent = 'Opening...';
+  openingText.style.animation = '';
+  swipePrompt.style.display = 'none';
   revealCard.style.display = 'none';
   closeBtn.style.display = 'none';
+  swipeCard.classList.remove('swiped', 'swiping');
+  swipeCard.style.transform = '';
 
   try {
     const res = await fetch(`/api/packs/${packId}/open`, { method: 'POST' });
@@ -189,11 +198,33 @@ async function openPackUI(packId) {
     currentBananas = data.newBalance;
     document.getElementById('display-bananas').textContent = '🍌 ' + currentBananas.toLocaleString();
 
-    // Dramatic pause
-    await new Promise(r => setTimeout(r, 1200));
+    // Store result for after swipe
+    pendingReveal = data;
 
-    // Reveal
+    // Short pause then show swipe card
+    await new Promise(r => setTimeout(r, 600));
     openingText.style.display = 'none';
+    swipePrompt.style.display = 'flex';
+
+  } catch (err) {
+    openingText.textContent = 'Connection error';
+    openingText.style.animation = 'none';
+    closeBtn.style.display = 'inline-block';
+  }
+}
+
+function showRevealCard() {
+  if (!pendingReveal) return;
+  const data = pendingReveal;
+  pendingReveal = null;
+
+  const swipePrompt = document.getElementById('swipe-prompt');
+  const revealCard = document.getElementById('reveal-card');
+  const closeBtn = document.getElementById('reveal-close');
+
+  // Hide swipe, show reveal after a beat
+  setTimeout(() => {
+    swipePrompt.style.display = 'none';
     revealCard.style.display = 'block';
     revealCard.className = 'reveal-card glow-' + data.character.rarity;
 
@@ -203,12 +234,83 @@ async function openPackUI(packId) {
     document.getElementById('reveal-name').textContent = data.character.name;
 
     closeBtn.style.display = 'inline-block';
-  } catch (err) {
-    openingText.textContent = 'Connection error';
-    openingText.style.animation = 'none';
-    closeBtn.style.display = 'inline-block';
-  }
+  }, 350);
 }
+
+// Swipe handling
+(function initSwipe() {
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+
+  function getSwipeCard() {
+    return document.getElementById('swipe-card');
+  }
+
+  function onStart(e) {
+    const card = getSwipeCard();
+    if (!card || card.classList.contains('swiped')) return;
+    isDragging = true;
+    card.classList.add('swiping');
+    const point = e.touches ? e.touches[0] : e;
+    startY = point.clientY;
+    currentY = startY;
+  }
+
+  function onMove(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const card = getSwipeCard();
+    if (!card) return;
+    const point = e.touches ? e.touches[0] : e;
+    currentY = point.clientY;
+    const deltaY = currentY - startY;
+    // Only allow upward swipe
+    if (deltaY < 0) {
+      const rotation = deltaY * 0.03;
+      card.style.transform = `translateY(${deltaY}px) rotate(${rotation}deg)`;
+    }
+  }
+
+  function onEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    const card = getSwipeCard();
+    if (!card) return;
+    card.classList.remove('swiping');
+
+    const deltaY = currentY - startY;
+
+    // Threshold: swipe up at least 80px
+    if (deltaY < -80) {
+      card.classList.add('swiped');
+      card.style.transform = '';
+      showRevealCard();
+    } else {
+      // Snap back
+      card.style.transform = '';
+    }
+  }
+
+  document.addEventListener('touchstart', e => {
+    if (e.target.closest('.swipe-card')) onStart(e);
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (isDragging) onMove(e);
+  }, { passive: false });
+
+  document.addEventListener('touchend', onEnd);
+
+  // Mouse fallback for desktop testing
+  document.addEventListener('mousedown', e => {
+    if (e.target.closest('.swipe-card')) onStart(e);
+  });
+  document.addEventListener('mousemove', e => {
+    if (isDragging) onMove(e);
+  });
+  document.addEventListener('mouseup', onEnd);
+})();
 
 function closeReveal() {
   document.getElementById('pack-overlay').style.display = 'none';

@@ -376,3 +376,57 @@ main {
   border-color: #fff;
   box-shadow: 0 0 80px rgba(255, 255, 255, 0.6);
 }
+
+/* Swipe to Reveal */
+.swipe-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  touch-action: none;
+  user-select: none;
+}
+
+.swipe-card {
+  width: 200px;
+  height: 280px;
+  background: #16213e;
+  border: 3px solid #f5c542;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5rem;
+  position: relative;
+  transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+  cursor: grab;
+}
+
+.swipe-card.swiping {
+  transition: none;
+}
+
+.swipe-card.swiped {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  transform: translateY(-120vh) rotate(5deg);
+  opacity: 0;
+}
+
+.swipe-card-front {
+  font-size: 5rem;
+}
+
+.swipe-card-back {
+  display: none;
+}
+
+.swipe-hint {
+  color: #888;
+  font-size: 0.9rem;
+  animation: hintBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes hintBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}

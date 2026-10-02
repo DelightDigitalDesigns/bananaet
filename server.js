@@ -33,5 +33,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Bananaet running at http://localhost:${PORT}`);
+  console.log(`Bananalet running at http://localhost:${PORT}`);
 });

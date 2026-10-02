@@ -1,4 +1,4 @@
-# Bananaet
+# Bananalet
 
 A private collectible game server. Earn Bananas, open packs, collect characters across rarity tiers, trade with friends, and climb the leaderboard.
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bananaet</title>
+  <title>Bananalet</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
     <!-- Auth Screen -->
     <div id="auth-screen" class="screen active">
       <div class="auth-container">
-        <h1 class="logo">🍌 Bananaet</h1>
+        <h1 class="logo">🍌 Bananalet</h1>
         <p class="tagline">Collect. Trade. Flex.</p>
 
         <div id="login-form" class="auth-form">
@@ -23,7 +23,7 @@
         <div id="register-form" class="auth-form" style="display:none;">
           <input type="text" id="reg-username" placeholder="Pick a username" maxlength="20" autocomplete="off">
           <input type="text" id="reg-invite" placeholder="Invite code" autocomplete="off">
-          <button onclick="register()">Join Bananaet</button>
+          <button onclick="register()">Join Bananalet</button>
           <p class="switch-text">Already have an account? <a href="#" onclick="showLogin()">Log in</a></p>
         </div>
 
@@ -34,7 +34,7 @@
     <!-- Dashboard Screen -->
     <div id="dashboard-screen" class="screen">
       <header>
-        <span class="logo-small">🍌 Bananaet</span>
+        <span class="logo-small">🍌 Bananalet</span>
         <div class="user-info">
           <span id="display-username"></span>
           <span id="display-bananas" class="banana-count"></span>
@@ -66,6 +66,13 @@
       <div id="pack-overlay" class="pack-overlay" style="display:none;">
         <div class="pack-reveal">
           <div id="pack-opening-text" class="pack-opening-text">Opening...</div>
+          <div id="swipe-prompt" class="swipe-prompt" style="display:none;">
+            <div class="swipe-card" id="swipe-card">
+              <div class="swipe-card-front">🍌</div>
+              <div class="swipe-card-back" id="swipe-card-back"></div>
+            </div>
+            <p class="swipe-hint">⬆ Swipe up to reveal</p>
+          </div>
           <div id="reveal-card" class="reveal-card" style="display:none;">
             <div id="reveal-rarity" class="reveal-rarity"></div>
             <div id="reveal-emoji" class="reveal-emoji"></div>
