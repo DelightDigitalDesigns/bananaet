@@ -115,6 +115,7 @@ function switchTab(tab) {
   if (tab === 'craft') loadCrafting();
   if (tab === 'trade') loadTrading();
   if (tab === 'chat') loadChat();
+  if (tab === 'leaderboard') loadLeaderboard();
   if (tab === 'admin') loadAdmin();
 }
 
@@ -602,6 +603,39 @@ async function adminToggleBan(userId, banned) {
     body: JSON.stringify({ userId, banned })
   });
   loadAdminUsers();
+}
+
+// ===== LEADERBOARD =====
+async function loadLeaderboard() {
+  try {
+    const res = await fetch('/api/leaderboard');
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const el = document.getElementById('leaderboard-list');
+    if (data.length === 0) {
+      el.innerHTML = '<p style="color:#888;">No players yet.</p>';
+      return;
+    }
+
+    const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
+    el.innerHTML = data.map(entry => `
+      <div class="lb-row lb-rank-${entry.rank <= 3 ? entry.rank : 'other'}">
+        <div class="lb-rank">${medals[entry.rank] || '#' + entry.rank}</div>
+        <div class="lb-info">
+          <div class="lb-username">${entry.username} ${entry.isOwner ? '👑' : ''}</div>
+          <div class="lb-stats">${entry.totalUnique} unique · ${entry.totalCount} total${entry.rarestTier ? ' · Rarest: ' + (RARITY_LABELS[entry.rarestTier] || entry.rarestTier) : ''}</div>
+        </div>
+        <div>
+          <div class="lb-score">${entry.score.toLocaleString()}</div>
+          <div class="lb-score-label">score</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Failed to load leaderboard', err);
+  }
 }
 
 let currentUserId = null;

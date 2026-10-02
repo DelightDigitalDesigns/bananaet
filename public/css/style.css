@@ -731,3 +731,67 @@ main {
 .admin-user-info .banana-inline { color: #f5c542; font-weight: 600; }
 .admin-user-actions { display: flex; gap: 0.4rem; }
 .admin-user-actions button { padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 5px; }
+
+/* Leaderboard */
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #16213e;
+  border: 2px solid #333;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+.lb-row.lb-rank-1 { border-color: #f5c542; background: linear-gradient(135deg, #16213e, #2a2000); }
+.lb-row.lb-rank-2 { border-color: #c0c0c0; }
+.lb-row.lb-rank-3 { border-color: #cd7f32; }
+
+.lb-rank {
+  font-size: 1.5rem;
+  font-weight: 800;
+  width: 40px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.lb-rank-1 .lb-rank { color: #f5c542; }
+.lb-rank-2 .lb-rank { color: #c0c0c0; }
+.lb-rank-3 .lb-rank { color: #cd7f32; }
+
+.lb-info {
+  flex: 1;
+}
+
+.lb-username {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.lb-stats {
+  color: #888;
+  font-size: 0.8rem;
+  margin-top: 0.15rem;
+}
+
+.lb-score {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #f5c542;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lb-score-label {
+  font-size: 0.65rem;
+  color: #888;
+  text-transform: uppercase;
+  text-align: right;
+}

@@ -47,6 +47,7 @@
         <button class="tab" onclick="switchTab('craft')">Craft</button>
         <button class="tab" onclick="switchTab('trade')">Trade</button>
         <button class="tab" onclick="switchTab('chat')">Chat</button>
+        <button class="tab" onclick="switchTab('leaderboard')">Ranks</button>
         <button class="tab" id="admin-tab" style="display:none;" onclick="switchTab('admin')">Admin</button>
       </nav>
       <main>
@@ -89,6 +90,12 @@
               <button onclick="sendChat()">Send</button>
             </div>
           </div>
+        </div>
+
+        <!-- Leaderboard Tab -->
+        <div id="tab-leaderboard" class="tab-content">
+          <h2 style="margin:1rem 0 0.5rem;">Leaderboard</h2>
+          <div id="leaderboard-list" class="leaderboard-list"></div>
         </div>
 
         <!-- Admin Tab -->
