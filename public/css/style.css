@@ -430,3 +430,140 @@ main {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
 }
+
+/* Crafting */
+.craft-recipes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.craft-card {
+  background: #16213e;
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.craft-arrow {
+  text-align: center;
+  font-size: 1.5rem;
+  color: #f5c542;
+}
+
+.craft-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.craft-from, .craft-to {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.craft-count {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.craft-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.craft-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.craft-result {
+  margin-top: 1.5rem;
+  background: #16213e;
+  border: 2px solid #f5c542;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.craft-result-title { font-weight: 700; margin-bottom: 0.5rem; }
+
+/* Trading */
+.trade-section {
+  margin-bottom: 1.5rem;
+}
+
+.trade-section h3 {
+  margin-bottom: 0.75rem;
+  color: #f5c542;
+  font-size: 1rem;
+}
+
+.trade-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 400px;
+}
+
+.trade-form select {
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #333;
+  border-radius: 8px;
+  background: #16213e;
+  color: #eee;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.trade-form select:focus {
+  border-color: #f5c542;
+}
+
+.trades-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.trade-item {
+  background: #16213e;
+  border: 2px solid #333;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.trade-details {
+  flex: 1;
+  min-width: 200px;
+}
+
+.trade-details p {
+  margin: 0.15rem 0;
+  font-size: 0.9rem;
+}
+
+.trade-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.trade-actions button {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+}
+
+.btn-accept { background: #10b981; color: #fff; }
+.btn-decline { background: #ef4444; color: #fff; }
+.btn-cancel { background: #555; color: #eee; }
+
+.no-trades { color: #666; font-style: italic; font-size: 0.9rem; }

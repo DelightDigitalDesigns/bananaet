@@ -44,6 +44,8 @@
       <nav class="tab-bar">
         <button class="tab active" onclick="switchTab('shop')">Shop</button>
         <button class="tab" onclick="switchTab('inventory')">Collection</button>
+        <button class="tab" onclick="switchTab('craft')">Craft</button>
+        <button class="tab" onclick="switchTab('trade')">Trade</button>
       </nav>
       <main>
         <div id="daily-bonus-banner" class="bonus-banner" style="display:none;">
@@ -59,6 +61,40 @@
         <div id="tab-inventory" class="tab-content">
           <div id="inventory-stats" class="inventory-stats"></div>
           <div id="inventory-grid" class="inventory-grid"></div>
+        </div>
+
+        <!-- Craft Tab -->
+        <div id="tab-craft" class="tab-content">
+          <h2 style="margin:1rem 0 0.5rem;">Crafting</h2>
+          <p style="color:#888;margin-bottom:1rem;">Combine duplicates to craft rarer characters.</p>
+          <div id="craft-recipes" class="craft-recipes"></div>
+          <div id="craft-result" class="craft-result" style="display:none;"></div>
+        </div>
+
+        <!-- Trade Tab -->
+        <div id="tab-trade" class="tab-content">
+          <h2 style="margin:1rem 0 0.5rem;">Trading</h2>
+
+          <div id="trade-section-create" class="trade-section">
+            <h3>New Trade</h3>
+            <div class="trade-form">
+              <select id="trade-partner"><option value="">Select player...</option></select>
+              <select id="trade-offer"><option value="">Your character to offer...</option></select>
+              <select id="trade-request"><option value="">Request back (optional)...</option></select>
+              <button onclick="sendTradeOffer()">Send Offer</button>
+            </div>
+            <p id="trade-error" class="error"></p>
+          </div>
+
+          <div id="trade-section-incoming" class="trade-section">
+            <h3>Incoming Offers</h3>
+            <div id="incoming-trades" class="trades-list"></div>
+          </div>
+
+          <div id="trade-section-outgoing" class="trade-section">
+            <h3>Your Pending Offers</h3>
+            <div id="outgoing-trades" class="trades-list"></div>
+          </div>
         </div>
       </main>
 
