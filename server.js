@@ -25,6 +25,7 @@ app.use('/api/packs', require('./server/routes/packs'));
 app.use('/api/inventory', require('./server/routes/inventory'));
 app.use('/api/trades', require('./server/routes/trades'));
 app.use('/api/crafting', require('./server/routes/crafting'));
+app.use('/api/admin', require('./server/routes/admin'));
 
 // Serve index for all non-API routes
 app.get('*', (req, res) => {
