@@ -41,13 +41,39 @@
           <button class="btn-small" onclick="logout()">Logout</button>
         </div>
       </header>
+      <nav class="tab-bar">
+        <button class="tab active" onclick="switchTab('shop')">Shop</button>
+        <button class="tab" onclick="switchTab('inventory')">Collection</button>
+      </nav>
       <main>
         <div id="daily-bonus-banner" class="bonus-banner" style="display:none;">
           <p>🍌 Daily bonus: +<span id="bonus-amount"></span> Bananas!</p>
         </div>
-        <h2>Welcome to Bananaet</h2>
-        <p>Dashboard coming soon — packs, inventory, and more.</p>
+
+        <!-- Shop Tab -->
+        <div id="tab-shop" class="tab-content active">
+          <div id="packs-grid" class="packs-grid"></div>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="tab-inventory" class="tab-content">
+          <div id="inventory-stats" class="inventory-stats"></div>
+          <div id="inventory-grid" class="inventory-grid"></div>
+        </div>
       </main>
+
+      <!-- Pack Opening Overlay -->
+      <div id="pack-overlay" class="pack-overlay" style="display:none;">
+        <div class="pack-reveal">
+          <div id="pack-opening-text" class="pack-opening-text">Opening...</div>
+          <div id="reveal-card" class="reveal-card" style="display:none;">
+            <div id="reveal-rarity" class="reveal-rarity"></div>
+            <div id="reveal-emoji" class="reveal-emoji"></div>
+            <div id="reveal-name" class="reveal-name"></div>
+          </div>
+          <button id="reveal-close" class="reveal-close" style="display:none;" onclick="closeReveal()">Continue</button>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -24,6 +24,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // API routes
 app.use('/api/auth', require('./server/routes/auth'));
+app.use('/api/packs', require('./server/routes/packs'));
+app.use('/api/inventory', require('./server/routes/inventory'));
 
 // Serve index for all non-API routes
 app.get('*', (req, res) => {
