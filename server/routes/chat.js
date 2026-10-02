@@ -1,6 +1,22 @@
 const { getDb } = require('../db/init');
-const Filter = require('bad-words');
-const filter = new Filter();
+let filter;
+try {
+  const BadWords = require('bad-words');
+  filter = typeof BadWords === 'function' ? new BadWords() : new BadWords.default();
+} catch(e) {
+  // Fallback: basic filter if package fails
+  filter = {
+    clean(text) {
+      const badList = ['fuck','shit','ass','bitch','damn','hell','dick','pussy','cock','cunt','fag','nigger','nigga','retard','slut','whore'];
+      let cleaned = text;
+      for (const word of badList) {
+        const regex = new RegExp('\\b' + word + '\\b', 'gi');
+        cleaned = cleaned.replace(regex, '*'.repeat(word.length));
+      }
+      return cleaned;
+    }
+  };
+}
 
 // Add custom words to filter if needed
 // filter.addWords('customword1', 'customword2');
