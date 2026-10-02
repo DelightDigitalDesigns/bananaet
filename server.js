@@ -6,9 +6,6 @@ const { initialize } = require('./server/db/init');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize database
-initialize();
-
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -32,6 +29,12 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Bananalet running at http://localhost:${PORT}`);
+// Initialize database (async), then start server
+initialize().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Bananalet running at http://localhost:${PORT}`);
+  });
+}).catch(err => {
+  console.error('Failed to initialize database:', err);
+  process.exit(1);
 });
