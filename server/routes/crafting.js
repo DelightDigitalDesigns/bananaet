@@ -91,10 +91,15 @@ router.post('/craft', requireAuth, (req, res) => {
       ).get(chromaName, 'chroma_shiny');
 
       if (!resultChar) {
+        // Build shiny image path from base
+        let chromaImagePath = baseChar.image_path;
+        if (chromaImagePath) {
+          chromaImagePath = chromaImagePath.replace('.png', '-shiny.png');
+        }
         const r = db.prepare(
           'INSERT INTO characters (name, rarity, season_id, image_path) VALUES (?, ?, ?, ?)'
-        ).run(chromaName, 'chroma_shiny', baseChar.season_id, baseChar.image_path);
-        resultChar = { id: r.lastInsertRowid, name: chromaName, rarity: 'chroma_shiny' };
+        ).run(chromaName, 'chroma_shiny', baseChar.season_id, chromaImagePath);
+        resultChar = { id: r.lastInsertRowid, name: chromaName, rarity: 'chroma_shiny', image_path: chromaImagePath };
       }
     } else {
       resultChar = db.prepare(`

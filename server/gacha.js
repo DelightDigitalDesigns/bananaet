@@ -52,6 +52,14 @@ function openPack(userId, packId) {
         ? `✨ ${baseChars.name}`
         : `🌈 ${baseChars.name}`;
 
+      // Build the chroma image path from the base image path
+      // e.g. /img/characters/fleeing-civilian.png → fleeing-civilian-shiny.png
+      let chromaImagePath = baseChars.image_path;
+      if (chromaImagePath) {
+        const suffix = rarity === 'chroma_shiny' ? '-shiny' : '-rainbow';
+        chromaImagePath = chromaImagePath.replace('.png', suffix + '.png');
+      }
+
       let chromaChar = db.prepare(
         'SELECT * FROM characters WHERE name = ? AND rarity = ? AND season_id = ?'
       ).get(chromaName, rarity, pack.season_id);
@@ -60,8 +68,8 @@ function openPack(userId, packId) {
         // Create the chroma variant on the fly
         const result = db.prepare(
           'INSERT INTO characters (name, rarity, season_id, image_path) VALUES (?, ?, ?, ?)'
-        ).run(chromaName, rarity, pack.season_id, baseChars.image_path);
-        chromaChar = { id: result.lastInsertRowid, name: chromaName, rarity, season_id: pack.season_id };
+        ).run(chromaName, rarity, pack.season_id, chromaImagePath);
+        chromaChar = { id: result.lastInsertRowid, name: chromaName, rarity, season_id: pack.season_id, image_path: chromaImagePath };
       }
 
       character = chromaChar;

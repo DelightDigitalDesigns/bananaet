@@ -242,7 +242,20 @@ function showRevealCard() {
 
     document.getElementById('reveal-rarity').textContent = RARITY_LABELS[data.character.rarity] || data.character.rarity;
     document.getElementById('reveal-rarity').className = 'reveal-rarity rarity-' + data.character.rarity;
-    document.getElementById('reveal-emoji').textContent = RARITY_EMOJIS[data.character.rarity] || '❓';
+
+    const revealImg = document.getElementById('reveal-img');
+    const revealEmoji = document.getElementById('reveal-emoji');
+    if (data.character.image_path) {
+      revealImg.src = data.character.image_path;
+      revealImg.alt = data.character.name;
+      revealImg.style.display = 'block';
+      revealEmoji.style.display = 'none';
+    } else {
+      revealImg.style.display = 'none';
+      revealEmoji.style.display = 'block';
+      revealEmoji.textContent = RARITY_EMOJIS[data.character.rarity] || '❓';
+    }
+
     document.getElementById('reveal-name').textContent = data.character.name;
 
     closeBtn.style.display = 'inline-block';
@@ -365,7 +378,9 @@ async function loadInventory() {
     gridEl.innerHTML = data.items.map(item => `
       <div class="inv-card rarity-${item.rarity}">
         ${item.count > 1 ? `<div class="inv-count">x${item.count}</div>` : ''}
-        <div class="inv-emoji">${RARITY_EMOJIS[item.rarity] || '❓'}</div>
+        ${item.image_path
+          ? `<img class="inv-img" src="${item.image_path}" alt="${item.name}">`
+          : `<div class="inv-emoji">${RARITY_EMOJIS[item.rarity] || '❓'}</div>`}
         <div class="inv-name">${item.name}</div>
         <div class="inv-rarity rarity-${item.rarity}">${RARITY_LABELS[item.rarity] || item.rarity}</div>
       </div>
@@ -687,7 +702,9 @@ async function doCraft(fromRarity) {
     resultEl.style.display = 'block';
     resultEl.innerHTML = `
       <div class="craft-result-title">Crafted!</div>
-      <div style="font-size:2rem;margin:0.5rem 0;">${RARITY_EMOJIS[data.result.rarity] || '❓'}</div>
+      ${data.result.image_path
+        ? `<img src="${data.result.image_path}" alt="${data.result.name}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;margin:0.5rem 0;">`
+        : `<div style="font-size:2rem;margin:0.5rem 0;">${RARITY_EMOJIS[data.result.rarity] || '❓'}</div>`}
       <div class="rarity-${data.result.rarity}" style="font-weight:700;">${data.result.name}</div>
       <div style="color:#888;font-size:0.8rem;text-transform:uppercase;">${RARITY_LABELS[data.result.rarity]}</div>
     `;

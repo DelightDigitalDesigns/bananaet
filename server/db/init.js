@@ -109,34 +109,34 @@ function seed(db) {
   const seasonId = seasonResult.lastInsertRowid;
 
   const insertChar = db.prepare(
-    `INSERT INTO characters (name, rarity, season_id) VALUES (?, ?, ?)`
+    `INSERT INTO characters (name, rarity, season_id, image_path) VALUES (?, ?, ?, ?)`
   );
 
   const characters = [
-    ['Fleeing Civilian', 'common'],
-    ['News Reporter', 'common'],
-    ['Military Soldier', 'common'],
-    ['Abandoned Car', 'common'],
-    ['Ferry Passenger', 'common'],
-    ['Red Weed Patch', 'rare'],
-    ['Crashed Airplane', 'rare'],
-    ['EMP Shockwave', 'rare'],
-    ['Basement Hideout', 'rare'],
-    ['Lightning Storm', 'epic'],
-    ['Alien Probe (Snake-Cam)', 'epic'],
-    ['Burning Train', 'epic'],
-    ['Harvester Machine', 'legendary'],
-    ['Hudson River Ferry', 'legendary'],
-    ['Alien Pilot', 'mystical'],
-    ['The Red Weed Bloom', 'bananarang'],
-    ['Tripod', 'astronomical'],
-    ['Tom Cruise (Ray Ferrier)', 'astronomical'],
-    ['Uber Pod', 'astronomical'],
+    ['Fleeing Civilian', 'common', '/img/characters/fleeing-civilian.png'],
+    ['News Reporter', 'common', '/img/characters/news-reporter.png'],
+    ['Military Soldier', 'common', '/img/characters/military-soldier.png'],
+    ['Abandoned Car', 'common', '/img/characters/abandoned-car.png'],
+    ['Ferry Passenger', 'common', '/img/characters/ferry-passenger.png'],
+    ['Red Weed Patch', 'rare', '/img/characters/red-weed-patch.png'],
+    ['Crashed Airplane', 'rare', '/img/characters/crashed-airplane.png'],
+    ['EMP Shockwave', 'rare', '/img/characters/emp-shockwave.png'],
+    ['Basement Hideout', 'rare', '/img/characters/basement-hideout.png'],
+    ['Lightning Storm', 'epic', '/img/characters/lightning-storm.png'],
+    ['Alien Probe (Snake-Cam)', 'epic', '/img/characters/alien-probe.png'],
+    ['Burning Train', 'epic', '/img/characters/burning-train.png'],
+    ['Harvester Machine', 'legendary', '/img/characters/harvester-machine.png'],
+    ['Hudson River Ferry', 'legendary', '/img/characters/hudson-river-ferry.png'],
+    ['Alien Pilot', 'mystical', '/img/characters/alien-pilot.png'],
+    ['The Red Weed Bloom', 'bananarang', '/img/characters/the-red-weed-bloom.png'],
+    ['Tripod', 'astronomical', '/img/characters/tripod.png'],
+    ['Ray Ferrier', 'astronomical', '/img/characters/ray-ferrier.png'],
+    ['Uber Pod', 'astronomical', '/img/characters/uber-pod.png'],
   ];
 
   const insertMany = db.transaction(() => {
-    for (const [name, rarity] of characters) {
-      insertChar.run(name, rarity, seasonId);
+    for (const [name, rarity, imagePath] of characters) {
+      insertChar.run(name, rarity, seasonId, imagePath);
     }
   });
   insertMany();
