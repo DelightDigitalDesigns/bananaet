@@ -138,7 +138,7 @@ router.post('/craft', requireAuth, (req, res) => {
     res.json({
       success: true,
       consumed: { rarity: recipe.from, count: recipe.count },
-      result: { id: resultChar.id, name: resultChar.name, rarity: resultChar.rarity }
+      result: { id: resultChar.id, name: resultChar.name, rarity: resultChar.rarity, image_path: resultChar.image_path }
     });
   } catch (e) {
     db.close();
