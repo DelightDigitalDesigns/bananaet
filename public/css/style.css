@@ -551,16 +551,18 @@ main {
 }
 
 .craft-result {
-  margin-top: 1.5rem;
-  background: #161b22;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #161b22 0%, #1c2333 100%);
   border: 2px solid #f5c542;
   border-radius: 14px;
   padding: 1.5rem;
   text-align: center;
   animation: revealPop 0.4s ease-out;
+  box-shadow: 0 0 20px rgba(245, 197, 66, 0.2);
 }
 
-.craft-result-title { font-weight: 700; margin-bottom: 0.5rem; }
+.craft-result-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem; color: #f5c542; }
+.craft-result-img { width: 160px; height: 160px; object-fit: cover; border-radius: 10px; margin: 0.75rem 0; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
 
 /* ===== TRADING ===== */
 .trade-section { margin-bottom: 1.5rem; }

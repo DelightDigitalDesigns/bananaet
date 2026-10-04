@@ -701,13 +701,16 @@ async function doCraft(fromRarity) {
     const resultEl = document.getElementById('craft-result');
     resultEl.style.display = 'block';
     resultEl.innerHTML = `
-      <div class="craft-result-title">Crafted!</div>
+      <div class="craft-result-title">🎉 You crafted a new character!</div>
       ${data.result.image_path
-        ? `<img src="${data.result.image_path}" alt="${data.result.name}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;margin:0.5rem 0;">`
-        : `<div style="font-size:2rem;margin:0.5rem 0;">${RARITY_EMOJIS[data.result.rarity] || '❓'}</div>`}
-      <div class="rarity-${data.result.rarity}" style="font-weight:700;">${data.result.name}</div>
-      <div style="color:#888;font-size:0.8rem;text-transform:uppercase;">${RARITY_LABELS[data.result.rarity]}</div>
+        ? `<img src="${data.result.image_path}" alt="${data.result.name}" class="craft-result-img">`
+        : `<div style="font-size:3rem;margin:0.75rem 0;">${RARITY_EMOJIS[data.result.rarity] || '❓'}</div>`}
+      <div class="rarity-${data.result.rarity}" style="font-weight:700;font-size:1.1rem;">${data.result.name}</div>
+      <div class="rarity-${data.result.rarity}" style="font-size:0.85rem;text-transform:uppercase;font-weight:800;letter-spacing:1px;margin-top:0.25rem;">${RARITY_LABELS[data.result.rarity]}</div>
+      <div style="color:#888;font-size:0.75rem;margin-top:0.5rem;">Used ${data.consumed.count} ${RARITY_LABELS[data.consumed.rarity]} cards</div>
     `;
+
+    resultEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
     loadCrafting();
   } catch (err) {
