@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 60" fill="none">
+  <!-- Peel body -->
+  <path d="M40 55 Q20 40 15 20 Q12 8 25 5 Q32 3 35 15 Q38 28 40 35 Q42 28 45 15 Q48 3 55 5 Q68 8 65 20 Q60 40 40 55Z" fill="#FFD639"/>
+  <path d="M40 50 Q24 38 20 22 Q18 12 28 10 Q33 9 35 18 Q38 30 40 35 Q42 30 45 18 Q47 9 52 10 Q62 12 60 22 Q56 38 40 50Z" fill="#FFE566"/>
+  <!-- Stem nub -->
+  <ellipse cx="40" cy="8" rx="6" ry="4" fill="#8B6914"/>
+  <ellipse cx="40" cy="8" rx="4" ry="3" fill="#A0781E"/>
+</svg>

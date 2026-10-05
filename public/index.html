@@ -11,7 +11,8 @@
     <!-- Auth Screen -->
     <div id="auth-screen" class="screen active">
       <div class="auth-container">
-        <h1 class="logo">🍌 Bananalet</h1>
+        <img src="/img/mascot/banana-happy.svg" alt="Bananalet mascot" class="auth-mascot" draggable="false">
+        <h1 class="logo">Bananalet</h1>
         <p class="tagline">Collect. Trade. Flex.</p>
 
         <div id="login-form" class="auth-form">
@@ -36,7 +37,7 @@
     <!-- Dashboard Screen -->
     <div id="dashboard-screen" class="screen">
       <header>
-        <span class="logo-small">🍌 Bananalet</span>
+        <span class="logo-small"><img src="/img/mascot/banana-happy.svg" alt="" class="header-mascot" draggable="false"> Bananalet</span>
         <div class="user-info">
           <span id="display-username"></span>
           <span id="display-bananas" class="banana-count"></span>
@@ -65,13 +66,23 @@
         <!-- Inventory Tab -->
         <div id="tab-inventory" class="tab-content">
           <div id="inventory-stats" class="inventory-stats"></div>
+          <div id="inventory-empty" class="empty-state" style="display:none;">
+            <img src="/img/mascot/banana-sad.svg" alt="" class="empty-mascot" draggable="false">
+            <p class="empty-text">No bananas in your bunch yet!</p>
+            <p class="empty-subtext">Open some packs to start collecting.</p>
+          </div>
           <div id="inventory-grid" class="inventory-grid"></div>
         </div>
 
         <!-- Craft Tab -->
         <div id="tab-craft" class="tab-content">
-          <h2 style="margin:1rem 0 0.5rem;">Crafting</h2>
-          <p style="color:#888;margin-bottom:1rem;">Combine duplicates to craft rarer characters.</p>
+          <div class="section-header-with-mascot">
+            <div>
+              <h2>Crafting</h2>
+              <p style="color:#7d8590;margin-bottom:0;">Combine duplicates to craft rarer characters.</p>
+            </div>
+            <img src="/img/mascot/banana-excited.svg" alt="" class="section-mascot" draggable="false">
+          </div>
           <div id="craft-result" class="craft-result" style="display:none;"></div>
           <div id="craft-recipes" class="craft-recipes"></div>
         </div>
@@ -96,7 +107,10 @@
 
         <!-- Leaderboard Tab -->
         <div id="tab-leaderboard" class="tab-content">
-          <h2 style="margin:1rem 0 0.5rem;">Leaderboard</h2>
+          <div class="section-header-with-mascot">
+            <h2>Leaderboard</h2>
+            <img src="/img/mascot/banana-cool.svg" alt="" class="section-mascot" draggable="false">
+          </div>
           <div id="leaderboard-list" class="leaderboard-list"></div>
         </div>
 
@@ -148,7 +162,10 @@
 
         <!-- Trade Tab -->
         <div id="tab-trade" class="tab-content">
-          <h2 style="margin:1rem 0 0.5rem;">Trading</h2>
+          <div class="section-header-with-mascot">
+            <h2>Trading</h2>
+            <img src="/img/mascot/banana-happy.svg" alt="" class="section-mascot" draggable="false">
+          </div>
 
           <div id="trade-section-create" class="trade-section">
             <h3>New Trade</h3>

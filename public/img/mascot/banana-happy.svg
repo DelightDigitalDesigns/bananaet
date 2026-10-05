@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300" fill="none">
+  <!-- Banana Body -->
+  <ellipse cx="100" cy="160" rx="52" ry="100" fill="#FFD639" transform="rotate(-8 100 160)"/>
+  <ellipse cx="100" cy="160" rx="48" ry="96" fill="#FFE566" transform="rotate(-8 100 160)"/>
+  <!-- Inner highlight -->
+  <ellipse cx="90" cy="150" rx="28" ry="70" fill="#FFF0A0" opacity="0.4" transform="rotate(-8 90 150)"/>
+  
+  <!-- Brown tip top -->
+  <ellipse cx="96" cy="62" rx="14" ry="10" fill="#8B6914" transform="rotate(-12 96 62)"/>
+  <ellipse cx="96" cy="62" rx="10" ry="7" fill="#A0781E" transform="rotate(-12 96 62)"/>
+  
+  <!-- Brown tip bottom -->
+  <ellipse cx="104" cy="258" rx="12" ry="8" fill="#8B6914" transform="rotate(-5 104 258)"/>
+  <ellipse cx="104" cy="258" rx="8" ry="5" fill="#A0781E" transform="rotate(-5 104 258)"/>
+  
+  <!-- Left Eye -->
+  <ellipse cx="78" cy="138" rx="12" ry="14" fill="white"/>
+  <ellipse cx="80" cy="140" rx="7" ry="9" fill="#2D1B00"/>
+  <ellipse cx="82" cy="137" rx="3" ry="3.5" fill="white"/>
+  
+  <!-- Right Eye -->
+  <ellipse cx="118" cy="135" rx="12" ry="14" fill="white"/>
+  <ellipse cx="120" cy="137" rx="7" ry="9" fill="#2D1B00"/>
+  <ellipse cx="122" cy="134" rx="3" ry="3.5" fill="white"/>
+  
+  <!-- Happy mouth -->
+  <path d="M78 168 Q98 192 122 166" stroke="#2D1B00" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  
+  <!-- Blush spots -->
+  <ellipse cx="68" cy="162" rx="8" ry="5" fill="#FFB347" opacity="0.5"/>
+  <ellipse cx="132" cy="159" rx="8" ry="5" fill="#FFB347" opacity="0.5"/>
+  
+  <!-- Left arm waving -->
+  <path d="M52 170 Q28 148 18 118" stroke="#FFD639" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <path d="M52 170 Q28 148 18 118" stroke="#FFE566" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Hand -->
+  <circle cx="16" cy="114" r="10" fill="#FFD639"/>
+  <circle cx="16" cy="114" r="7" fill="#FFE566"/>
+  
+  <!-- Right arm -->
+  <path d="M148 168 Q168 150 174 128" stroke="#FFD639" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <path d="M148 168 Q168 150 174 128" stroke="#FFE566" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Hand -->
+  <circle cx="176" cy="124" r="10" fill="#FFD639"/>
+  <circle cx="176" cy="124" r="7" fill="#FFE566"/>
+  
+  <!-- Left foot -->
+  <ellipse cx="82" cy="262" rx="16" ry="8" fill="#D4A017"/>
+  <ellipse cx="82" cy="261" rx="14" ry="6" fill="#E8B825"/>
+  
+  <!-- Right foot -->
+  <ellipse cx="116" cy="264" rx="16" ry="8" fill="#D4A017"/>
+  <ellipse cx="116" cy="263" rx="14" ry="6" fill="#E8B825"/>
+</svg>

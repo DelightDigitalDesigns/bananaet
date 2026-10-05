@@ -260,6 +260,19 @@ function showRevealCard() {
 
     document.getElementById('reveal-name').textContent = data.character.name;
 
+    // Add mascot for rare pulls
+    const oldMascot = revealCard.querySelector('.reveal-mascot');
+    if (oldMascot) oldMascot.remove();
+    const rarePulls = ['legendary', 'chroma_shiny', 'chroma_rainbow', 'mystical', 'bananarang', 'astronomical'];
+    if (rarePulls.includes(data.character.rarity)) {
+      const mascotImg = document.createElement('img');
+      mascotImg.src = '/img/mascot/banana-excited.svg';
+      mascotImg.alt = '';
+      mascotImg.className = 'reveal-mascot';
+      mascotImg.draggable = false;
+      revealCard.appendChild(mascotImg);
+    }
+
     closeBtn.style.display = 'inline-block';
   }, 350);
 }
@@ -372,10 +385,13 @@ async function loadInventory() {
 
     // Grid
     const gridEl = document.getElementById('inventory-grid');
+    const emptyEl = document.getElementById('inventory-empty');
     if (data.items.length === 0) {
-      gridEl.innerHTML = '<p style="color:#888; text-align:center; margin-top:2rem;">No characters yet. Open some packs!</p>';
+      gridEl.innerHTML = '';
+      if (emptyEl) emptyEl.style.display = 'flex';
       return;
     }
+    if (emptyEl) emptyEl.style.display = 'none';
 
     gridEl.innerHTML = data.items.map(item => `
       <div class="inv-card rarity-${item.rarity}">
