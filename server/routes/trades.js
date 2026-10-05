@@ -145,25 +145,28 @@ router.post('/:id/accept', requireAuth, (req, res) => {
     }
 
     // Execute the swap
-    // Remove from sender, add to recipient
+    // Remove from sender, add to recipient (carry potassium from sender's card)
     const removeFromSender = db.prepare('UPDATE inventory SET count = count - 1 WHERE user_id = ? AND character_id = ?');
-    const addToUser = function(userId, charId) {
+    const addToUser = function(userId, charId, fromUserId) {
       const existing = db.prepare('SELECT id FROM inventory WHERE user_id = ? AND character_id = ?').get(userId, charId);
       if (existing) {
         db.prepare('UPDATE inventory SET count = count + 1 WHERE id = ?').run(existing.id);
       } else {
-        db.prepare('INSERT INTO inventory (user_id, character_id) VALUES (?, ?)').run(userId, charId);
+        // Carry the potassium level from the sender's copy
+        const senderEntry = db.prepare('SELECT potassium_level FROM inventory WHERE user_id = ? AND character_id = ?').get(fromUserId, charId);
+        const potassium = senderEntry ? senderEntry.potassium_level : 0;
+        db.prepare('INSERT INTO inventory (user_id, character_id, potassium_level) VALUES (?, ?, ?)').run(userId, charId, potassium);
       }
     };
 
-    // Sender's character → Recipient
+    // Sender's character → Recipient (read potassium before decrementing)
+    addToUser(trade.to_user_id, trade.from_character_id, trade.from_user_id);
     removeFromSender.run(trade.from_user_id, trade.from_character_id);
-    addToUser(trade.to_user_id, trade.from_character_id);
 
     // If two-way trade, Recipient's character → Sender
     if (trade.to_character_id) {
+      addToUser(trade.from_user_id, trade.to_character_id, trade.to_user_id);
       removeFromSender.run(trade.to_user_id, trade.to_character_id);
-      addToUser(trade.from_user_id, trade.to_character_id);
     }
 
     // Clean up zero-count inventory rows

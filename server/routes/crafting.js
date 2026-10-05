@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getDb } = require('../db/init');
 const { requireAuth } = require('../middleware/auth');
+const { rollPotassium } = require('../potassium');
 
 // Crafting recipes
 const RECIPES = [
@@ -124,21 +125,25 @@ router.post('/craft', requireAuth, (req, res) => {
     db.prepare('DELETE FROM inventory WHERE count <= 0 AND user_id = ?').run(req.session.userId);
 
     // Add result to inventory
+    const potassiumLevel = rollPotassium(resultChar.rarity);
+    let finalPotassium = potassiumLevel;
+
     const existing = db.prepare(
-      'SELECT id FROM inventory WHERE user_id = ? AND character_id = ?'
+      'SELECT id, potassium_level FROM inventory WHERE user_id = ? AND character_id = ?'
     ).get(req.session.userId, resultChar.id);
 
     if (existing) {
       db.prepare('UPDATE inventory SET count = count + 1 WHERE id = ?').run(existing.id);
+      finalPotassium = existing.potassium_level;
     } else {
-      db.prepare('INSERT INTO inventory (user_id, character_id) VALUES (?, ?)').run(req.session.userId, resultChar.id);
+      db.prepare('INSERT INTO inventory (user_id, character_id, potassium_level) VALUES (?, ?, ?)').run(req.session.userId, resultChar.id, potassiumLevel);
     }
 
     db.close();
     res.json({
       success: true,
       consumed: { rarity: recipe.from, count: recipe.count },
-      result: { id: resultChar.id, name: resultChar.name, rarity: resultChar.rarity, image_path: resultChar.image_path }
+      result: { id: resultChar.id, name: resultChar.name, rarity: resultChar.rarity, image_path: resultChar.image_path, potassium_level: finalPotassium }
     });
   } catch (e) {
     db.close();

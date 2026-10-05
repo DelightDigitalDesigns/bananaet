@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS inventory (
   user_id INTEGER REFERENCES users(id),
   character_id INTEGER REFERENCES characters(id),
   count INTEGER DEFAULT 1,
+  potassium_level INTEGER DEFAULT 0,
   obtained_at TEXT DEFAULT (datetime('now')),
   UNIQUE(user_id, character_id)
 );

@@ -260,6 +260,20 @@ function showRevealCard() {
 
     document.getElementById('reveal-name').textContent = data.character.name;
 
+    // Show potassium level
+    let potassiumEl = revealCard.querySelector('.reveal-potassium');
+    if (!potassiumEl) {
+      potassiumEl = document.createElement('div');
+      potassiumEl.className = 'reveal-potassium';
+      revealCard.querySelector('.reveal-name').insertAdjacentElement('afterend', potassiumEl);
+    }
+    if (data.character.potassium_level) {
+      potassiumEl.textContent = `🧪 Potassium: ${data.character.potassium_level}`;
+      potassiumEl.style.display = 'block';
+    } else {
+      potassiumEl.style.display = 'none';
+    }
+
     // Add mascot for rare pulls
     const oldMascot = revealCard.querySelector('.reveal-mascot');
     if (oldMascot) oldMascot.remove();
@@ -396,6 +410,7 @@ async function loadInventory() {
     gridEl.innerHTML = data.items.map(item => `
       <div class="inv-card rarity-${item.rarity}">
         ${item.count > 1 ? `<div class="inv-count">x${item.count}</div>` : ''}
+        ${item.potassium_level ? `<div class="inv-potassium" title="Potassium Level">🧪${item.potassium_level}</div>` : ''}
         ${item.image_path
           ? `<img class="inv-img" src="${item.image_path}" alt="${item.name}">`
           : `<div class="inv-emoji">${RARITY_EMOJIS[item.rarity] || '❓'}</div>`}

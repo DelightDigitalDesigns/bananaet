@@ -1,4 +1,5 @@
 const { getDb } = require('./db/init');
+const { rollPotassium } = require('./potassium');
 
 /**
  * Opens a pack: deducts cost, rolls rarity, picks a random character,
@@ -85,22 +86,27 @@ function openPack(userId, packId) {
       throw new Error(`No characters found for rarity: ${rarity}`);
     }
 
+    // Roll potassium level for this pull
+    const potassiumLevel = rollPotassium(character.rarity);
+
     // Transaction: deduct bananas + add to inventory
+    let finalPotassium = potassiumLevel;
     const execute = db.transaction(() => {
       // Deduct cost
       db.prepare('UPDATE users SET bananas = bananas - ? WHERE id = ?').run(pack.cost, userId);
 
       // Add to inventory (increment if already owned)
       const existing = db.prepare(
-        'SELECT id, count FROM inventory WHERE user_id = ? AND character_id = ?'
+        'SELECT id, count, potassium_level FROM inventory WHERE user_id = ? AND character_id = ?'
       ).get(userId, character.id);
 
       if (existing) {
         db.prepare('UPDATE inventory SET count = count + 1 WHERE id = ?').run(existing.id);
+        finalPotassium = existing.potassium_level;
       } else {
         db.prepare(
-          'INSERT INTO inventory (user_id, character_id) VALUES (?, ?)'
-        ).run(userId, character.id);
+          'INSERT INTO inventory (user_id, character_id, potassium_level) VALUES (?, ?, ?)'
+        ).run(userId, character.id, potassiumLevel);
       }
     });
     execute();
@@ -113,7 +119,8 @@ function openPack(userId, packId) {
         id: character.id,
         name: character.name,
         rarity: character.rarity,
-        image_path: character.image_path
+        image_path: character.image_path,
+        potassium_level: finalPotassium
       },
       newBalance: updated.bananas,
       packName: pack.name,

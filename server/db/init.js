@@ -92,11 +92,23 @@ async function initialize() {
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
   db.exec(schema);
 
+  // Migration: add potassium_level column if it doesn't exist on an older DB
+  try {
+    db.prepare('SELECT potassium_level FROM inventory LIMIT 1').get();
+  } catch (e) {
+    db.exec('ALTER TABLE inventory ADD COLUMN potassium_level INTEGER DEFAULT 0');
+    console.log('Migration: added potassium_level column to inventory.');
+  }
+
   // Seed only if empty
   const seasonCount = db.prepare('SELECT COUNT(*) as c FROM seasons').get().c;
   if (seasonCount === 0) {
     seed(db);
   }
+
+  // Backfill potassium levels for any existing inventory entries
+  const { backfillPotassium } = require('../potassium');
+  backfillPotassium(db);
 
   db.close();
   console.log('Database initialized.');

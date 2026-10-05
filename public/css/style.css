@@ -331,6 +331,28 @@ main {
   font-weight: 700;
 }
 
+.inv-card .inv-potassium {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: linear-gradient(135deg, #2d5a1e, #1a3a12);
+  border: 1px solid #3fb950;
+  border-radius: 8px;
+  padding: 1px 5px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #7ee787;
+  white-space: nowrap;
+}
+
+.reveal-potassium {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #7ee787;
+  letter-spacing: 1px;
+}
+
 /* Rarity colors */
 .rarity-common { color: #8b949e; }
 .inv-card.rarity-common { border-color: #484f58; }

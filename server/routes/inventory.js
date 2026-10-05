@@ -9,7 +9,7 @@ router.get('/', requireAuth, (req, res) => {
   try {
     const items = db.prepare(`
       SELECT c.id, c.name, c.rarity, c.image_path, c.season_id,
-             i.count, i.obtained_at, s.name as season_name
+             i.count, i.potassium_level, i.obtained_at, s.name as season_name
       FROM inventory i
       JOIN characters c ON i.character_id = c.id
       JOIN seasons s ON c.season_id = s.id
@@ -56,7 +56,7 @@ router.get('/user/:userId', requireAuth, (req, res) => {
     }
 
     const items = db.prepare(`
-      SELECT c.id, c.name, c.rarity, c.image_path, i.count, s.name as season_name
+      SELECT c.id, c.name, c.rarity, c.image_path, i.count, i.potassium_level, s.name as season_name
       FROM inventory i
       JOIN characters c ON i.character_id = c.id
       JOIN seasons s ON c.season_id = s.id
