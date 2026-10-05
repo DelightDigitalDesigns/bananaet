@@ -182,7 +182,7 @@ function setupChat(io) {
       if (mainRoom) {
         for (const id of mainRoom) {
           const s = io.sockets.sockets.get(id);
-          if (s && !s.isSuperadmin) users.push({ username: s.username, isOwner: s.isOwner });
+          if (s && !s.isSuperadmin) users.push({ userId: s.userId, username: s.username, isOwner: s.isOwner });
         }
       }
       socket.emit('online_users', users);

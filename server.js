@@ -52,7 +52,9 @@ app.get('*', (req, res) => {
 // Initialize database, setup chat, start server
 initialize().then(() => {
   const { setupChat } = require('./server/routes/chat');
+  const { setupWar } = require('./server/routes/war');
   setupChat(io);
+  setupWar(io);
 
   server.listen(PORT, () => {
     console.log(`Bananalet running at http://localhost:${PORT}`);

@@ -117,6 +117,7 @@ function switchTab(tab) {
   if (tab === 'craft') loadCrafting();
   if (tab === 'trade') loadTrading();
   if (tab === 'chat') loadChat();
+  if (tab === 'games') loadGames();
   if (tab === 'leaderboard') loadLeaderboard();
   if (tab === 'admin') loadAdmin();
 }
@@ -905,6 +906,200 @@ async function respondTrade(tradeId, action) {
   } catch (err) {
     alert('Trade action failed');
   }
+}
+
+// ===== POTASSIUM WAR =====
+let warChallengerId = null;
+let warInitialized = false;
+
+function loadGames() {
+  // Make sure socket + war listeners are set up
+  if (!socket) initChat();
+  if (!warInitialized) initWarListeners();
+
+  // Request online players list
+  socket.emit('get_online');
+}
+
+function initWarListeners() {
+  if (!socket || warInitialized) return;
+  warInitialized = true;
+
+  // Receive online player list (reuse chat's online list)
+  socket.on('online_users', (users) => {
+    renderWarPlayers(users);
+  });
+
+  // Challenge sent confirmation
+  socket.on('war:sent', (data) => {
+    const statusEl = document.getElementById('war-online-players');
+    const existingStatus = statusEl.querySelector('.war-status');
+    if (existingStatus) existingStatus.remove();
+    const div = document.createElement('div');
+    div.className = 'war-status';
+    div.textContent = `⚔️ Challenge sent to ${data.targetName}... waiting for response`;
+    statusEl.prepend(div);
+  });
+
+  // Incoming challenge
+  socket.on('war:incoming', (data) => {
+    warChallengerId = data.challengerId;
+    document.getElementById('war-challenger-name').textContent = data.challengerName;
+    document.getElementById('war-incoming').style.display = 'flex';
+  });
+
+  // Challenge declined
+  socket.on('war:declined', (data) => {
+    const statusEl = document.getElementById('war-online-players');
+    const existingStatus = statusEl.querySelector('.war-status');
+    if (existingStatus) existingStatus.remove();
+    const div = document.createElement('div');
+    div.className = 'war-status';
+    div.textContent = `${data.username} declined your challenge.`;
+    statusEl.prepend(div);
+    setTimeout(() => div.remove(), 4000);
+  });
+
+  // Challenge expired
+  socket.on('war:expired', () => {
+    const statusEl = document.getElementById('war-online-players');
+    const existingStatus = statusEl.querySelector('.war-status');
+    if (existingStatus) existingStatus.textContent = 'Challenge expired.';
+    setTimeout(() => {
+      const s = statusEl.querySelector('.war-status');
+      if (s) s.remove();
+    }, 3000);
+  });
+
+  // Battle result
+  socket.on('war:result', (data) => {
+    document.getElementById('war-incoming').style.display = 'none';
+    showWarResult(data);
+    // Refresh banana count
+    fetch('/api/auth/me').then(r => r.json()).then(u => {
+      document.getElementById('display-bananas').textContent = `🍌 ${u.bananas.toLocaleString()}`;
+    }).catch(() => {});
+  });
+
+  // Error
+  socket.on('war:error', (data) => {
+    alert(data.message);
+  });
+}
+
+function renderWarPlayers(users) {
+  const container = document.getElementById('war-online-players');
+  // Preserve any status message
+  const existingStatus = container.querySelector('.war-status');
+
+  if (users.length === 0) {
+    container.innerHTML = '<p style="color:#484f58;font-style:italic;">No one is online right now.</p>';
+    return;
+  }
+
+  const currentUser = document.getElementById('display-username').textContent;
+
+  let html = users.map(u => {
+    const isSelf = u.username === currentUser;
+    return `
+      <div class="war-player-row ${isSelf ? 'war-self-row' : ''}">
+        <span class="war-player-name">
+          ${u.username}${u.isOwner ? '<span class="owner-tag">👑</span>' : ''}
+        </span>
+        ${isSelf
+          ? ''
+          : `<button class="war-challenge-btn" onclick="warChallenge(${u.userId})">⚔️ Challenge</button>`
+        }
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
+  if (existingStatus) container.prepend(existingStatus);
+}
+
+function warChallenge(userId) {
+  if (!socket) return;
+  socket.emit('war:challenge', { targetId: userId });
+}
+
+function warAccept() {
+  if (!warChallengerId || !socket) return;
+  socket.emit('war:accept', { challengerId: warChallengerId });
+  document.getElementById('war-incoming').style.display = 'none';
+  warChallengerId = null;
+}
+
+function warDecline() {
+  if (!warChallengerId || !socket) return;
+  socket.emit('war:decline', { challengerId: warChallengerId });
+  document.getElementById('war-incoming').style.display = 'none';
+  warChallengerId = null;
+}
+
+function showWarResult(data) {
+  const overlay = document.getElementById('war-result');
+  const currentUserId = null; // We'll determine winner display from names
+
+  // Title
+  const titleEl = document.getElementById('war-result-title');
+  if (data.isDraw) {
+    titleEl.textContent = '⚔️ DRAW!';
+    titleEl.style.color = '#7d8590';
+  } else {
+    titleEl.textContent = `🏆 ${data.winnerName} WINS!`;
+    titleEl.style.color = '#f5c542';
+  }
+
+  // Player 1 (challenger)
+  document.getElementById('war-p1-name').textContent = data.challenger.username;
+  renderWarCards('war-p1-cards', data.challenger.cards);
+  const p1TotalEl = document.getElementById('war-p1-total');
+  p1TotalEl.textContent = `🧪 ${data.challenger.total}`;
+  p1TotalEl.className = 'war-total' +
+    (data.winnerId === data.challenger.userId ? ' winner' : '') +
+    (data.winnerId && data.winnerId !== data.challenger.userId ? ' loser' : '');
+
+  // Player 2 (defender)
+  document.getElementById('war-p2-name').textContent = data.defender.username;
+  renderWarCards('war-p2-cards', data.defender.cards);
+  const p2TotalEl = document.getElementById('war-p2-total');
+  p2TotalEl.textContent = `🧪 ${data.defender.total}`;
+  p2TotalEl.className = 'war-total' +
+    (data.winnerId === data.defender.userId ? ' winner' : '') +
+    (data.winnerId && data.winnerId !== data.defender.userId ? ' loser' : '');
+
+  // Prize text
+  const prizeEl = document.getElementById('war-result-prize');
+  if (data.isDraw) {
+    prizeEl.textContent = 'No payout — it\'s a draw!';
+    prizeEl.style.color = '#7d8590';
+  } else {
+    prizeEl.textContent = `🍌 ${data.winnerName} earns ${data.prize} Bananas!`;
+    prizeEl.style.color = '#f5c542';
+  }
+
+  overlay.style.display = 'flex';
+}
+
+function renderWarCards(containerId, cards) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = cards.map(card => `
+    <div class="war-card rarity-${card.rarity}">
+      ${card.image_path
+        ? `<img class="war-card-img" src="${card.image_path}" alt="${card.name}">`
+        : `<div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">${RARITY_EMOJIS[card.rarity] || '❓'}</div>`
+      }
+      <div class="war-card-info">
+        <div class="war-card-name">${card.name}</div>
+        <div class="war-card-potassium">🧪 ${card.potassium_level}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function closeWarResult() {
+  document.getElementById('war-result').style.display = 'none';
 }
 
 // Check if already logged in on page load

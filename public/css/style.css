@@ -859,6 +859,283 @@ main {
   border-radius: 6px;
 }
 
+/* ===== POTASSIUM WAR ===== */
+.war-prize-info {
+  background: linear-gradient(135deg, #1a3a1a, #0d2a0d);
+  border: 1px solid #238636;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #7ee787;
+}
+
+.war-players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.war-player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #161b22;
+  border: 2px solid #21262d;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  transition: border-color 0.2s;
+}
+
+.war-player-row:hover {
+  border-color: #30363d;
+}
+
+.war-player-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.war-player-name .owner-tag {
+  color: #f5c542;
+  font-size: 0.7rem;
+  margin-left: 0.3rem;
+}
+
+.war-challenge-btn {
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #238636, #2ea043);
+  color: #fff;
+}
+
+.war-challenge-btn:hover {
+  box-shadow: 0 2px 10px rgba(46,160,67,0.3);
+}
+
+.war-challenge-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.war-self-row {
+  opacity: 0.5;
+}
+
+.war-self-row .war-player-name::after {
+  content: ' (you)';
+  color: #484f58;
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
+/* Incoming challenge popup */
+.war-incoming {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.war-incoming-inner {
+  background: #161b22;
+  border: 2px solid #f5c542;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 0 40px rgba(245,197,66,0.2);
+}
+
+.war-incoming-icon {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+}
+
+.war-incoming-inner p {
+  font-size: 1rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.4;
+}
+
+.war-incoming-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.war-incoming-actions button {
+  padding: 0.6rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+/* Battle result overlay */
+.war-result-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.war-result-inner {
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 20px;
+  padding: 1.5rem;
+  text-align: center;
+  max-width: 500px;
+  width: 95%;
+}
+
+.war-result-inner h3 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  color: #f5c542;
+}
+
+.war-battle-field {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.war-side {
+  flex: 1;
+  min-width: 0;
+}
+
+.war-side-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.war-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.war-card {
+  background: #0d1117;
+  border: 2px solid #30363d;
+  border-radius: 10px;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  animation: warCardFlip 0.4s ease-out both;
+}
+
+.war-card:nth-child(2) { animation-delay: 0.15s; }
+.war-card:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes warCardFlip {
+  0% { transform: rotateX(90deg); opacity: 0; }
+  100% { transform: rotateX(0deg); opacity: 1; }
+}
+
+.war-card-img {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.war-card-info {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.war-card-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.war-card-potassium {
+  font-size: 0.65rem;
+  color: #7ee787;
+  font-weight: 700;
+}
+
+.war-vs {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #f85149;
+  padding-top: 2.5rem;
+  flex-shrink: 0;
+}
+
+.war-total {
+  margin-top: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #7ee787;
+}
+
+.war-total.winner {
+  color: #f5c542;
+  text-shadow: 0 0 8px rgba(245,197,66,0.4);
+}
+
+.war-total.loser {
+  color: #f85149;
+}
+
+.war-result-prize {
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.war-result-inner button {
+  padding: 0.65rem 2rem;
+  border-radius: 10px;
+}
+
+.war-status {
+  text-align: center;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  color: #f5c542;
+  font-weight: 600;
+}
+
 /* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #0d1117; }
