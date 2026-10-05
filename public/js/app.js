@@ -23,17 +23,18 @@ function showError(msg) {
 // Auth
 async function register() {
   const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
   const inviteCode = document.getElementById('reg-invite').value.trim();
 
-  if (!username || !inviteCode) {
-    return showError('Fill in both fields');
+  if (!username || !password || !inviteCode) {
+    return showError('Fill in all fields');
   }
 
   try {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, inviteCode })
+      body: JSON.stringify({ username, password, inviteCode })
     });
     const data = await res.json();
 
@@ -49,16 +50,17 @@ async function register() {
 
 async function login() {
   const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
 
-  if (!username) {
-    return showError('Enter your username');
+  if (!username || !password) {
+    return showError('Enter your username and password');
   }
 
   try {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username })
+      body: JSON.stringify({ username, password })
     });
     const data = await res.json();
 
@@ -656,7 +658,7 @@ async function loadLeaderboard() {
 let currentUserId = null;
 
 // ===== CRAFTING =====
-async function loadCrafting() {
+async function loadCrafting(keepResult) {
   try {
     const res = await fetch('/api/crafting/available');
     if (!res.ok) return;
@@ -679,7 +681,9 @@ async function loadCrafting() {
       </div>
     `).join('');
 
-    document.getElementById('craft-result').style.display = 'none';
+    if (!keepResult) {
+      document.getElementById('craft-result').style.display = 'none';
+    }
   } catch (err) {
     console.error('Failed to load crafting', err);
   }
@@ -712,7 +716,8 @@ async function doCraft(fromRarity) {
 
     resultEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    loadCrafting();
+    // Refresh recipe counts but keep the result card visible
+    loadCrafting(true);
   } catch (err) {
     alert('Crafting failed');
   }

@@ -19,7 +19,7 @@ const RARITY_POINTS = {
 router.get('/', requireAuth, (req, res) => {
   const db = getDb();
   try {
-    const users = db.prepare('SELECT id, username, is_owner FROM users WHERE banned = 0').all();
+    const users = db.prepare('SELECT id, username, is_owner FROM users WHERE banned = 0 AND is_superadmin = 0').all();
 
     const leaderboard = users.map(user => {
       const items = db.prepare(`

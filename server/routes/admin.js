@@ -52,7 +52,7 @@ router.get('/users', requireAuth, requireOwner, (req, res) => {
   const db = getDb();
   try {
     const users = db.prepare(
-      'SELECT id, username, bananas, is_owner, banned, muted, created_at, last_login FROM users'
+      'SELECT id, username, bananas, is_owner, banned, muted, created_at, last_login FROM users WHERE is_superadmin = 0'
     ).all();
     res.json(users);
   } finally {

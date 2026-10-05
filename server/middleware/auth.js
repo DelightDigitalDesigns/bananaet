@@ -12,4 +12,11 @@ function requireOwner(req, res, next) {
   next();
 }
 
-module.exports = { requireAuth, requireOwner };
+function requireSuperadmin(req, res, next) {
+  if (!req.session || !req.session.isSuperadmin) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  next();
+}
+
+module.exports = { requireAuth, requireOwner, requireSuperadmin };

@@ -16,12 +16,14 @@
 
         <div id="login-form" class="auth-form">
           <input type="text" id="login-username" placeholder="Username" maxlength="20" autocomplete="off">
+          <input type="password" id="login-password" placeholder="Password" autocomplete="off">
           <button onclick="login()">Log In</button>
           <p class="switch-text">New here? <a href="#" onclick="showRegister()">Register</a></p>
         </div>
 
         <div id="register-form" class="auth-form" style="display:none;">
           <input type="text" id="reg-username" placeholder="Pick a username" maxlength="20" autocomplete="off">
+          <input type="password" id="reg-password" placeholder="Choose a password" autocomplete="off">
           <input type="text" id="reg-invite" placeholder="Invite code" autocomplete="off">
           <button onclick="register()">Join Bananalet</button>
           <p class="switch-text">Already have an account? <a href="#" onclick="showLogin()">Log in</a></p>

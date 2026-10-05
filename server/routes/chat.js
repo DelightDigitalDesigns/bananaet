@@ -18,16 +18,56 @@ try {
   };
 }
 
-// Add custom words to filter if needed
-// filter.addWords('customword1', 'customword2');
+// Chat kill switch — in-memory flag synced to DB
+let chatKilled = false;
+
+function loadChatKillSwitch() {
+  const db = getDb();
+  try {
+    const row = db.prepare("SELECT value FROM server_settings WHERE key = 'chat_killed'").get();
+    chatKilled = row ? row.value === '1' : false;
+  } catch(e) { chatKilled = false; }
+  finally { db.close(); }
+}
+
+function setChatKillSwitch(killed) {
+  chatKilled = killed;
+  const db = getDb();
+  try {
+    db.prepare("INSERT OR REPLACE INTO server_settings (key, value) VALUES ('chat_killed', ?)").run(killed ? '1' : '0');
+    db.close();
+  } catch(e) { db.close(); }
+}
+
+function isChatKilled() { return chatKilled; }
+
+// Purge chat messages older than 14 days
+function purgeChatMessages() {
+  const db = getDb();
+  try {
+    const result = db.prepare("DELETE FROM chat_messages WHERE created_at < datetime('now', '-14 days')").run();
+    if (result.changes > 0) {
+      console.log(`Purged ${result.changes} chat messages older than 14 days`);
+    }
+    db.close();
+  } catch(e) { db.close(); }
+}
 
 function setupChat(io) {
+  // Load kill switch state from DB
+  loadChatKillSwitch();
+
+  // Purge old messages on startup and every hour
+  purgeChatMessages();
+  setInterval(purgeChatMessages, 60 * 60 * 1000);
+
   io.use((socket, next) => {
     const session = socket.request.session;
     if (session && session.userId) {
       socket.userId = session.userId;
       socket.username = session.username;
       socket.isOwner = session.isOwner;
+      socket.isSuperadmin = session.isSuperadmin || false;
       next();
     } else {
       next(new Error('Not authenticated'));
@@ -35,6 +75,11 @@ function setupChat(io) {
   });
 
   io.on('connection', (socket) => {
+    // Superadmin is invisible — don't join rooms, don't announce
+    if (socket.isSuperadmin) {
+      return;
+    }
+
     // Join main room by default
     socket.join('main');
     
@@ -63,6 +108,12 @@ function setupChat(io) {
 
     // Chat message
     socket.on('message', (data) => {
+      // Check kill switch
+      if (chatKilled) {
+        socket.emit('system', { message: 'Chat is currently disabled.', timestamp: new Date().toISOString() });
+        return;
+      }
+
       const room = data.room === 'admin' && socket.isOwner ? 'admin' : 'main';
       
       // Filter bad words
@@ -81,7 +132,15 @@ function setupChat(io) {
           socket.emit('system', { message: 'You are muted and cannot send messages.' });
           return;
         }
-      } finally { db2.close(); }
+
+        // Log message to DB
+        db2.prepare(
+          'INSERT INTO chat_messages (user_id, username, room, message) VALUES (?, ?, ?, ?)'
+        ).run(socket.userId, socket.username, room, cleanMessage);
+        db2.close();
+      } catch(e) { 
+        try { db2.close(); } catch(ex) {}
+      }
 
       io.to(room).emit('chat', {
         userId: socket.userId,
@@ -116,14 +175,14 @@ function setupChat(io) {
       } finally { db3.close(); }
     });
 
-    // Online users list
+    // Online users list — exclude superadmins
     socket.on('get_online', () => {
       const mainRoom = io.sockets.adapter.rooms.get('main');
       const users = [];
       if (mainRoom) {
         for (const id of mainRoom) {
           const s = io.sockets.sockets.get(id);
-          if (s) users.push({ username: s.username, isOwner: s.isOwner });
+          if (s && !s.isSuperadmin) users.push({ username: s.username, isOwner: s.isOwner });
         }
       }
       socket.emit('online_users', users);
@@ -138,4 +197,4 @@ function setupChat(io) {
   });
 }
 
-module.exports = { setupChat };
+module.exports = { setupChat, isChatKilled, setChatKillSwitch };

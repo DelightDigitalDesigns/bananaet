@@ -37,6 +37,12 @@ app.use('/api/trades', require('./server/routes/trades'));
 app.use('/api/crafting', require('./server/routes/crafting'));
 app.use('/api/admin', require('./server/routes/admin'));
 app.use('/api/leaderboard', require('./server/routes/leaderboard'));
+app.use('/api/superadmin', require('./server/routes/superadmin'));
+
+// Serve bananaboss page at secret URL
+app.get('/bananaboss', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'bananaboss.html'));
+});
 
 // Serve index for all non-API routes
 app.get('*', (req, res) => {

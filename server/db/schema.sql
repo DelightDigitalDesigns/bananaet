@@ -3,8 +3,10 @@
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
   invite_code TEXT NOT NULL,
   is_owner INTEGER DEFAULT 0,
+  is_superadmin INTEGER DEFAULT 0,
   bananas INTEGER DEFAULT 1500,
   last_login TEXT,
   last_daily_claim TEXT,
@@ -12,6 +14,20 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TEXT DEFAULT (datetime('now')),
   banned INTEGER DEFAULT 0,
   muted INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER REFERENCES users(id),
+  username TEXT NOT NULL,
+  room TEXT NOT NULL DEFAULT 'main',
+  message TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS server_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS invite_codes (

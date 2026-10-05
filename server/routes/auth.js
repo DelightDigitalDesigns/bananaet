@@ -1,13 +1,18 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const { getDb } = require('../db/init');
 
 // Register a new user with invite code
 router.post('/register', (req, res) => {
-  const { username, inviteCode } = req.body;
+  const { username, password, inviteCode } = req.body;
 
-  if (!username || !inviteCode) {
-    return res.status(400).json({ error: 'Username and invite code required' });
+  if (!username || !password || !inviteCode) {
+    return res.status(400).json({ error: 'Username, password, and invite code required' });
+  }
+
+  if (password.length < 4) {
+    return res.status(400).json({ error: 'Password must be at least 4 characters' });
   }
 
   const trimmedName = username.trim();
@@ -43,11 +48,14 @@ router.post('/register', (req, res) => {
     const userCount = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
     const isOwner = userCount === 0 ? 1 : 0;
 
+    // Hash password
+    const passwordHash = bcrypt.hashSync(password, 10);
+
     // Create user
     const result = db.prepare(
-      `INSERT INTO users (username, invite_code, is_owner, last_login, last_daily_claim)
-       VALUES (?, ?, ?, datetime('now'), date('now'))`
-    ).run(trimmedName, inviteCode.trim(), isOwner);
+      `INSERT INTO users (username, password_hash, invite_code, is_owner, last_login, last_daily_claim)
+       VALUES (?, ?, ?, ?, datetime('now'), date('now'))`
+    ).run(trimmedName, passwordHash, inviteCode.trim(), isOwner);
 
     // Mark invite code as used
     db.prepare(
@@ -73,22 +81,26 @@ router.post('/register', (req, res) => {
   }
 });
 
-// Login with existing username
+// Login with existing username + password
 router.post('/login', (req, res) => {
-  const { username } = req.body;
+  const { username, password } = req.body;
 
-  if (!username) {
-    return res.status(400).json({ error: 'Username required' });
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required' });
   }
 
   const db = getDb();
   try {
     const user = db.prepare(
-      'SELECT * FROM users WHERE username = ?'
+      'SELECT * FROM users WHERE username = ? AND is_superadmin = 0'
     ).get(username.trim());
 
     if (!user) {
       return res.status(400).json({ error: 'User not found. Need an invite code to register.' });
+    }
+
+    if (!bcrypt.compareSync(password, user.password_hash)) {
+      return res.status(400).json({ error: 'Wrong password' });
     }
 
     if (user.banned) {
