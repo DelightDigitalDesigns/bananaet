@@ -172,6 +172,13 @@
     .pagination button:hover { background: #21262d; }
     .pagination button:disabled { opacity: 0.4; cursor: default; }
     .pagination span { padding: 0.4rem 0.5rem; font-size: 0.85rem; color: #888; }
+
+    .invite-row { padding: 0.5rem 0; border-bottom: 1px solid #21262d; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.25rem; }
+    .invite-row:last-child { border-bottom: none; }
+    .invite-code { color: #f5c542; font-weight: 600; font-family: monospace; }
+    .invite-name { color: #58a6ff; font-weight: 600; }
+    .invite-claimed { color: #3fb950; }
+    .invite-unclaimed { color: #666; font-style: italic; }
   </style>
 </head>
 <body>
@@ -199,6 +206,14 @@
         <div id="kill-status" class="kill-switch-status">Loading...</div>
       </div>
       <button id="kill-btn" class="kill-btn" onclick="toggleKill()">...</button>
+    </div>
+
+    <div class="logs-section" style="margin-bottom:1.5rem;">
+      <div class="logs-header">
+        <h2>Invite Codes</h2>
+        <button onclick="loadInviteCodes()" style="padding:0.4rem 0.6rem;border:1px solid #30363d;border-radius:6px;background:#0d1117;color:#e6edf3;font-family:inherit;font-size:0.85rem;cursor:pointer;">Refresh</button>
+      </div>
+      <div id="invite-codes-list" class="chat-log" style="max-height:40vh;"></div>
     </div>
 
     <div class="logs-section">
@@ -302,7 +317,39 @@
       document.getElementById('auth-screen').style.display = 'none';
       document.getElementById('dashboard').classList.add('active');
       loadKillStatus();
+      loadInviteCodes();
       loadLogs(1);
+    }
+
+    async function loadInviteCodes() {
+      try {
+        const res = await fetch('/api/superadmin/invite-codes');
+        if (!res.ok) return;
+        const codes = await res.json();
+        const el = document.getElementById('invite-codes-list');
+        if (codes.length === 0) {
+          el.innerHTML = '<div class="log-empty">No invite codes yet</div>';
+          return;
+        }
+        el.innerHTML = codes.map(c => {
+          const created = new Date(c.created_at + 'Z').toLocaleDateString();
+          const usedAt = c.used_at ? new Date(c.used_at + 'Z').toLocaleDateString() : '';
+          return `<div class="invite-row">
+            <div>
+              <span class="invite-code">${escapeHtml(c.code)}</span>
+              ${c.assigned_to ? ` → <span class="invite-name">${escapeHtml(c.assigned_to)}</span>` : ''}
+            </div>
+            <div>
+              ${c.used && c.claimed_username
+                ? `<span class="invite-claimed">✓ ${escapeHtml(c.claimed_username)}</span> <span style="color:#666;font-size:0.75rem;">${usedAt}</span>`
+                : `<span class="invite-unclaimed">unclaimed</span>`
+              }
+            </div>
+          </div>`;
+        }).join('');
+      } catch(e) {
+        document.getElementById('invite-codes-list').innerHTML = '<div class="log-empty">Failed to load</div>';
+      }
     }
 
     // Kill switch

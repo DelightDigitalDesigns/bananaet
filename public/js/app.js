@@ -107,10 +107,17 @@ function enterDashboard(user, dailyBonus) {
 
 // Tabs
 function switchTab(tab) {
+  currentTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
   document.getElementById(`tab-${tab}`).classList.add('active');
+
+  // Clear chat unread badge when switching to chat
+  if (tab === 'chat') {
+    chatUnreadCount = 0;
+    updateChatBadge();
+  }
 
   if (tab === 'shop') loadPacks();
   if (tab === 'inventory') loadInventory();
@@ -428,12 +435,19 @@ async function loadInventory() {
 let socket = null;
 let currentRoom = 'main';
 let isOwnerUser = false;
+let currentTab = 'shop';
+let chatUnreadCount = 0;
 
 function initChat() {
   if (socket) return;
   socket = io();
 
   socket.on('chat', (data) => {
+    // Track unread if not on chat tab
+    if (currentTab !== 'chat') {
+      chatUnreadCount++;
+      updateChatBadge();
+    }
     if (data.room !== currentRoom) return;
     appendChatMessage(data);
   });
@@ -466,6 +480,89 @@ function initChat() {
   socket.on('online_users', (users) => {
     document.getElementById('online-count').textContent = `${users.length} online`;
   });
+
+  // Receive chat history when joining/switching rooms
+  socket.on('chat:history', (messages) => {
+    const el = document.getElementById('chat-messages');
+    // Only populate if currently empty (don't duplicate on re-request)
+    if (el.children.length === 0 && messages.length > 0) {
+      messages.forEach(msg => appendChatMessage(msg));
+    }
+  });
+
+  // Global challenge notification (works on any tab)
+  socket.on('war:incoming', (data) => {
+    warChallengerId = data.challengerId;
+    // Always show global toast regardless of tab
+    showChallengeToast(data.challengerName);
+    // If on Games tab, also show the full modal
+    if (currentTab === 'games') {
+      document.getElementById('war-challenger-name').textContent = data.challengerName;
+      document.getElementById('war-incoming').style.display = 'flex';
+    }
+  });
+}
+
+function updateChatBadge() {
+  const chatTab = document.querySelector('.tab[onclick="switchTab(\'chat\')"]');
+  if (!chatTab) return;
+  let badge = chatTab.querySelector('.tab-badge');
+  if (chatUnreadCount > 0) {
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'tab-badge';
+      chatTab.appendChild(badge);
+    }
+    badge.textContent = chatUnreadCount > 99 ? '99+' : chatUnreadCount;
+  } else {
+    if (badge) badge.remove();
+  }
+}
+
+function showChallengeToast(challengerName) {
+  // Remove any existing toast
+  const existing = document.getElementById('war-challenge-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'war-challenge-toast';
+  toast.className = 'war-challenge-toast';
+  toast.innerHTML = `
+    <div class="war-toast-inner">
+      <span class="war-toast-icon">⚔️</span>
+      <span class="war-toast-text"><strong>${escapeHtml(challengerName)}</strong> challenges you!</span>
+      <div class="war-toast-actions">
+        <button class="btn-accept" onclick="warAcceptFromToast()">Accept</button>
+        <button class="btn-decline" onclick="warDeclineFromToast()">Decline</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(toast);
+
+  // Auto-dismiss after 30 seconds
+  setTimeout(() => {
+    const t = document.getElementById('war-challenge-toast');
+    if (t) t.remove();
+  }, 30000);
+}
+
+function warAcceptFromToast() {
+  const toast = document.getElementById('war-challenge-toast');
+  if (toast) toast.remove();
+  if (!warChallengerId || !socket) return;
+  socket.emit('war:accept', { challengerId: warChallengerId });
+  warChallengerId = null;
+  // Hide the games-tab modal too
+  document.getElementById('war-incoming').style.display = 'none';
+}
+
+function warDeclineFromToast() {
+  const toast = document.getElementById('war-challenge-toast');
+  if (toast) toast.remove();
+  if (!warChallengerId || !socket) return;
+  socket.emit('war:decline', { challengerId: warChallengerId });
+  warChallengerId = null;
+  document.getElementById('war-incoming').style.display = 'none';
 }
 
 function appendChatMessage(data) {
@@ -503,11 +600,20 @@ function switchRoom(room) {
   document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('active'));
   document.querySelector(`.room-btn[onclick="switchRoom('${room}')"]`).classList.add('active');
   document.getElementById('chat-messages').innerHTML = '';
+  // Request history for the new room
+  if (socket) socket.emit('chat:get_history', { room });
 }
 
 function loadChat() {
   initChat();
-  if (socket) socket.emit('get_online');
+  if (socket) {
+    socket.emit('get_online');
+    // Load message history if chat is empty
+    const el = document.getElementById('chat-messages');
+    if (el.children.length === 0) {
+      socket.emit('chat:get_history', { room: currentRoom });
+    }
+  }
   if (isOwnerUser) {
     document.getElementById('admin-room-btn').style.display = 'inline-block';
   }
@@ -591,17 +697,22 @@ async function adminSetBananas() {
 
 async function adminCreateInvite() {
   const code = document.getElementById('admin-invite-input').value.trim();
+  const assignedTo = document.getElementById('admin-invite-name').value.trim();
   if (!code) return;
+  if (!assignedTo) return alert('Enter the real name of who this code is for');
 
   const res = await fetch('/api/admin/invite-codes', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ codes: [code] })
+    body: JSON.stringify({ codes: [code], assignedTo })
   });
   const data = await res.json();
   if (res.ok) {
-    document.getElementById('admin-invite-result').textContent = `Created: ${data.created.join(', ')}`;
+    document.getElementById('admin-invite-result').textContent = `Created: ${data.created.join(', ')} (for ${assignedTo})`;
     document.getElementById('admin-invite-input').value = '';
+    document.getElementById('admin-invite-name').value = '';
+  } else {
+    alert(data.error);
   }
 }
 
@@ -669,19 +780,25 @@ async function loadLeaderboard() {
 
     const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-    el.innerHTML = data.map(entry => `
-      <div class="lb-row lb-rank-${entry.rank <= 3 ? entry.rank : 'other'}">
-        <div class="lb-rank">${medals[entry.rank] || '#' + entry.rank}</div>
-        <div class="lb-info">
-          <div class="lb-username">${entry.username} ${entry.isOwner ? '👑' : ''}</div>
-          <div class="lb-stats">${entry.totalUnique} unique · ${entry.totalCount} total${entry.rarestTier ? ' · Rarest: ' + (RARITY_LABELS[entry.rarestTier] || entry.rarestTier) : ''}</div>
+    el.innerHTML = data.map(entry => {
+      const hasWarRecord = entry.warWins > 0 || entry.warLosses > 0 || entry.warDraws > 0;
+      const warText = hasWarRecord
+        ? ` · ⚔️ ${entry.warWins}W-${entry.warLosses}L${entry.warDraws > 0 ? '-' + entry.warDraws + 'D' : ''}`
+        : '';
+      return `
+        <div class="lb-row lb-rank-${entry.rank <= 3 ? entry.rank : 'other'}">
+          <div class="lb-rank">${medals[entry.rank] || '#' + entry.rank}</div>
+          <div class="lb-info">
+            <div class="lb-username">${entry.username} ${entry.isOwner ? '👑' : ''}</div>
+            <div class="lb-stats">${entry.totalUnique} unique · ${entry.totalCount} total${entry.rarestTier ? ' · Rarest: ' + (RARITY_LABELS[entry.rarestTier] || entry.rarestTier) : ''}${warText}</div>
+          </div>
+          <div>
+            <div class="lb-score">${entry.score.toLocaleString()}</div>
+            <div class="lb-score-label">score</div>
+          </div>
         </div>
-        <div>
-          <div class="lb-score">${entry.score.toLocaleString()}</div>
-          <div class="lb-score-label">score</div>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (err) {
     console.error('Failed to load leaderboard', err);
   }
@@ -941,13 +1058,6 @@ function initWarListeners() {
     statusEl.prepend(div);
   });
 
-  // Incoming challenge
-  socket.on('war:incoming', (data) => {
-    warChallengerId = data.challengerId;
-    document.getElementById('war-challenger-name').textContent = data.challengerName;
-    document.getElementById('war-incoming').style.display = 'flex';
-  });
-
   // Challenge declined
   socket.on('war:declined', (data) => {
     const statusEl = document.getElementById('war-online-players');
@@ -987,7 +1097,7 @@ function initWarListeners() {
   });
 }
 
-function renderWarPlayers(users) {
+async function renderWarPlayers(users) {
   const container = document.getElementById('war-online-players');
   // Preserve any status message
   const existingStatus = container.querySelector('.war-status');
@@ -999,12 +1109,27 @@ function renderWarPlayers(users) {
 
   const currentUser = document.getElementById('display-username').textContent;
 
+  // Fetch h2h records for all opponents
+  const h2hRecords = {};
+  const opponents = users.filter(u => u.username !== currentUser);
+  await Promise.all(opponents.map(async (u) => {
+    try {
+      const res = await fetch(`/api/war/h2h/${u.userId}`);
+      if (res.ok) h2hRecords[u.userId] = await res.json();
+    } catch(e) {}
+  }));
+
   let html = users.map(u => {
     const isSelf = u.username === currentUser;
+    const h2h = h2hRecords[u.userId];
+    const h2hText = h2h && (h2h.wins + h2h.losses + h2h.draws > 0)
+      ? `<span class="war-h2h">${h2h.wins}W-${h2h.losses}L${h2h.draws > 0 ? '-' + h2h.draws + 'D' : ''}</span>`
+      : '';
     return `
       <div class="war-player-row ${isSelf ? 'war-self-row' : ''}">
         <span class="war-player-name">
           ${u.username}${u.isOwner ? '<span class="owner-tag">👑</span>' : ''}
+          ${h2hText}
         </span>
         ${isSelf
           ? ''
@@ -1037,9 +1162,8 @@ function warDecline() {
   warChallengerId = null;
 }
 
-function showWarResult(data) {
+async function showWarResult(data) {
   const overlay = document.getElementById('war-result');
-  const currentUserId = null; // We'll determine winner display from names
 
   // Title
   const titleEl = document.getElementById('war-result-title');
@@ -1079,7 +1203,35 @@ function showWarResult(data) {
     prizeEl.style.color = '#f5c542';
   }
 
+  // Fetch and show h2h record
+  const opponentId = data.challenger.userId === currentUserId ? data.defender.userId : data.challenger.userId;
+  let h2hEl = document.getElementById('war-result-h2h');
+  if (!h2hEl) {
+    h2hEl = document.createElement('p');
+    h2hEl.id = 'war-result-h2h';
+    h2hEl.className = 'war-result-h2h';
+    prizeEl.insertAdjacentElement('afterend', h2hEl);
+  }
+  try {
+    const res = await fetch(`/api/war/h2h/${opponentId}`);
+    if (res.ok) {
+      const h2h = await res.json();
+      if (h2h.wins + h2h.losses + h2h.draws > 0) {
+        h2hEl.textContent = `Head-to-head: ${h2h.wins}W - ${h2h.losses}L${h2h.draws > 0 ? ' - ' + h2h.draws + 'D' : ''}`;
+        h2hEl.style.display = 'block';
+      } else {
+        h2hEl.style.display = 'none';
+      }
+    }
+  } catch(e) {
+    h2hEl.style.display = 'none';
+  }
+
   overlay.style.display = 'flex';
+
+  // Remove challenge toast if still showing
+  const toast = document.getElementById('war-challenge-toast');
+  if (toast) toast.remove();
 }
 
 function renderWarCards(containerId, cards) {

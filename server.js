@@ -52,7 +52,8 @@ app.get('*', (req, res) => {
 // Initialize database, setup chat, start server
 initialize().then(() => {
   const { setupChat } = require('./server/routes/chat');
-  const { setupWar } = require('./server/routes/war');
+  const { setupWar, warRouter } = require('./server/routes/war');
+  app.use('/api/war', warRouter);
   setupChat(io);
   setupWar(io);
 

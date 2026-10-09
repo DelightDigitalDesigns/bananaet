@@ -100,6 +100,34 @@ async function initialize() {
     console.log('Migration: added potassium_level column to inventory.');
   }
 
+  // Migration: add assigned_to and used_at to invite_codes
+  try {
+    db.prepare('SELECT assigned_to FROM invite_codes LIMIT 1').get();
+  } catch (e) {
+    db.exec('ALTER TABLE invite_codes ADD COLUMN assigned_to TEXT');
+    console.log('Migration: added assigned_to column to invite_codes.');
+  }
+  try {
+    db.prepare('SELECT used_at FROM invite_codes LIMIT 1').get();
+  } catch (e) {
+    db.exec('ALTER TABLE invite_codes ADD COLUMN used_at TEXT');
+    console.log('Migration: added used_at column to invite_codes.');
+  }
+
+  // Migration: create war_results table if it doesn't exist
+  db.exec(`CREATE TABLE IF NOT EXISTS war_results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    player1_id INTEGER REFERENCES users(id),
+    player2_id INTEGER REFERENCES users(id),
+    winner_id INTEGER REFERENCES users(id),
+    player1_total INTEGER NOT NULL,
+    player2_total INTEGER NOT NULL,
+    is_draw INTEGER DEFAULT 0,
+    prize INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`);
+  console.log('Migration: ensured war_results table exists.');
+
   // Seed only if empty
   const seasonCount = db.prepare('SELECT COUNT(*) as c FROM seasons').get().c;
   if (seasonCount === 0) {

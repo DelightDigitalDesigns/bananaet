@@ -1367,3 +1367,103 @@ main {
   opacity: 0.6;
   flex-shrink: 0;
 }
+
+/* ===== CHAT UNREAD BADGE ===== */
+.tab {
+  position: relative;
+}
+
+.tab-badge {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  background: #f85149;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  line-height: 16px;
+  border-radius: 8px;
+  text-align: center;
+  padding: 0 4px;
+  pointer-events: none;
+  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes badgePop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+/* ===== GLOBAL CHALLENGE TOAST ===== */
+.war-challenge-toast {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 300;
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem;
+  animation: toastSlideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes toastSlideDown {
+  0% { transform: translateY(-100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.war-toast-inner {
+  background: linear-gradient(135deg, #1c1700, #161b22);
+  border: 2px solid #f5c542;
+  border-radius: 14px;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 8px 32px rgba(245,197,66,0.25), 0 0 0 1px rgba(0,0,0,0.5);
+  max-width: 500px;
+  width: 95%;
+}
+
+.war-toast-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.war-toast-text {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.war-toast-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.war-toast-actions button {
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  border-radius: 8px;
+}
+
+/* ===== WAR H2H DISPLAY ===== */
+.war-h2h {
+  font-size: 0.7rem;
+  color: #7d8590;
+  font-weight: 500;
+  margin-left: 0.5rem;
+  background: #21262d;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.war-result-h2h {
+  font-size: 0.85rem;
+  color: #7d8590;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}

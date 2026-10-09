@@ -146,6 +146,23 @@ router.post('/chat-toggle', requireSuperadmin, (req, res) => {
   res.json({ success: true, killed: isChatKilled() });
 });
 
+// Get invite codes with real name → username mapping
+router.get('/invite-codes', requireSuperadmin, (req, res) => {
+  const db = getDb();
+  try {
+    const codes = db.prepare(`
+      SELECT ic.id, ic.code, ic.assigned_to, ic.used, ic.created_at, ic.used_at,
+             u.username as claimed_username
+      FROM invite_codes ic
+      LEFT JOIN users u ON ic.used_by = u.id
+      ORDER BY ic.created_at DESC
+    `).all();
+    res.json(codes);
+  } finally {
+    db.close();
+  }
+});
+
 // Logout
 router.post('/logout', (req, res) => {
   req.session.destroy();

@@ -175,6 +175,38 @@ function setupChat(io) {
       } finally { db3.close(); }
     });
 
+    // Chat history — send last 50 messages for a room
+    socket.on('chat:get_history', (data) => {
+      const room = (data && data.room === 'admin' && socket.isOwner) ? 'admin' : 'main';
+      const db4 = getDb();
+      try {
+        const messages = db4.prepare(`
+          SELECT cm.user_id as userId, cm.username, cm.message, cm.room,
+                 u.is_owner as isOwner, cm.created_at as timestamp
+          FROM chat_messages cm
+          LEFT JOIN users u ON cm.user_id = u.id
+          WHERE cm.room = ?
+          ORDER BY cm.created_at DESC
+          LIMIT 50
+        `).all(room);
+
+        // Reverse to chronological order and send
+        socket.emit('chat:history', messages.reverse().map(m => ({
+          userId: m.userId,
+          username: m.username,
+          message: m.message,
+          room: m.room,
+          isOwner: m.isOwner ? true : false,
+          badges: [], // Historical messages don't carry badge data
+          timestamp: m.timestamp
+        })));
+      } catch(e) {
+        socket.emit('chat:history', []);
+      } finally {
+        db4.close();
+      }
+    });
+
     // Online users list — exclude superadmins
     socket.on('get_online', () => {
       const mainRoom = io.sockets.adapter.rooms.get('main');

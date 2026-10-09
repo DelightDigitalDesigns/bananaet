@@ -33,9 +33,23 @@ CREATE TABLE IF NOT EXISTS server_settings (
 CREATE TABLE IF NOT EXISTS invite_codes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   code TEXT UNIQUE NOT NULL,
+  assigned_to TEXT,
   created_by INTEGER REFERENCES users(id),
   used_by INTEGER REFERENCES users(id),
   used INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  used_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS war_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  player1_id INTEGER REFERENCES users(id),
+  player2_id INTEGER REFERENCES users(id),
+  winner_id INTEGER REFERENCES users(id),
+  player1_total INTEGER NOT NULL,
+  player2_total INTEGER NOT NULL,
+  is_draw INTEGER DEFAULT 0,
+  prize INTEGER DEFAULT 0,
   created_at TEXT DEFAULT (datetime('now'))
 );
 

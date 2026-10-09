@@ -59,7 +59,7 @@ router.post('/register', (req, res) => {
 
     // Mark invite code as used
     db.prepare(
-      'UPDATE invite_codes SET used = 1, used_by = ? WHERE id = ?'
+      "UPDATE invite_codes SET used = 1, used_by = ?, used_at = datetime('now') WHERE id = ?"
     ).run(result.lastInsertRowid, code.id);
 
     // Set session

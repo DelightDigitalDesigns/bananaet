@@ -22,18 +22,21 @@ router.post('/bananas', requireAuth, requireOwner, (req, res) => {
 
 // Generate invite codes (owner only)
 router.post('/invite-codes', requireAuth, requireOwner, (req, res) => {
-  const { codes } = req.body;
+  const { codes, assignedTo } = req.body;
   if (!codes || !Array.isArray(codes)) {
     return res.status(400).json({ error: 'Provide an array of codes' });
+  }
+  if (!assignedTo || !assignedTo.trim()) {
+    return res.status(400).json({ error: 'Provide a name for who this code is for' });
   }
 
   const db = getDb();
   try {
-    const insert = db.prepare('INSERT INTO invite_codes (code, created_by) VALUES (?, ?)');
+    const insert = db.prepare('INSERT INTO invite_codes (code, assigned_to, created_by) VALUES (?, ?, ?)');
     const created = [];
     for (const code of codes) {
       try {
-        insert.run(code.trim(), req.session.userId);
+        insert.run(code.trim(), assignedTo.trim(), req.session.userId);
         created.push(code.trim());
       } catch (e) {
         // duplicate code, skip

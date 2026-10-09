@@ -21,6 +21,33 @@ router.get('/', requireAuth, (req, res) => {
   try {
     const users = db.prepare('SELECT id, username, is_owner FROM users WHERE banned = 0 AND is_superadmin = 0').all();
 
+    // Pre-fetch all war records in bulk
+    const warWins = {};
+    const warLosses = {};
+    const warDraws = {};
+
+    const winsRows = db.prepare(`
+      SELECT winner_id, COUNT(*) as c FROM war_results WHERE winner_id IS NOT NULL AND is_draw = 0 GROUP BY winner_id
+    `).all();
+    for (const r of winsRows) warWins[r.winner_id] = r.c;
+
+    const lossRows = db.prepare(`
+      SELECT loser_id, COUNT(*) as c FROM (
+        SELECT CASE WHEN winner_id = player1_id THEN player2_id ELSE player1_id END as loser_id
+        FROM war_results WHERE winner_id IS NOT NULL AND is_draw = 0
+      ) GROUP BY loser_id
+    `).all();
+    for (const r of lossRows) warLosses[r.loser_id] = r.c;
+
+    const drawRows = db.prepare(`
+      SELECT player_id, COUNT(*) as c FROM (
+        SELECT player1_id as player_id FROM war_results WHERE is_draw = 1
+        UNION ALL
+        SELECT player2_id as player_id FROM war_results WHERE is_draw = 1
+      ) GROUP BY player_id
+    `).all();
+    for (const r of drawRows) warDraws[r.player_id] = r.c;
+
     const leaderboard = users.map(user => {
       const items = db.prepare(`
         SELECT c.rarity, i.count
@@ -52,7 +79,10 @@ router.get('/', requireAuth, (req, res) => {
         score,
         totalUnique,
         totalCount,
-        rarestTier
+        rarestTier,
+        warWins: warWins[user.id] || 0,
+        warLosses: warLosses[user.id] || 0,
+        warDraws: warDraws[user.id] || 0
       };
     });
 

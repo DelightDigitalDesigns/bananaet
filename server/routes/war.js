@@ -1,4 +1,7 @@
+const express = require('express');
+const router = express.Router();
 const { getDb } = require('../db/init');
+const { requireAuth } = require('../middleware/auth');
 
 const WAR_PRIZE = 500; // Bananas for the winner
 const CARDS_PER_SIDE = 3;
@@ -82,11 +85,16 @@ function setupWar(io) {
         return;
       }
 
-      // Award bananas to winner
-      if (result.winnerId) {
+      // Store result and award bananas
+      {
         const db = getDb();
         try {
-          db.prepare('UPDATE users SET bananas = bananas + ? WHERE id = ?').run(WAR_PRIZE, result.winnerId);
+          db.prepare(`INSERT INTO war_results (player1_id, player2_id, winner_id, player1_total, player2_total, is_draw, prize)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`
+          ).run(challengerId, socket.userId, result.winnerId, result.challengerTotal, result.defenderTotal, result.isDraw ? 1 : 0, result.winnerId ? WAR_PRIZE : 0);
+          if (result.winnerId) {
+            db.prepare('UPDATE users SET bananas = bananas + ? WHERE id = ?').run(WAR_PRIZE, result.winnerId);
+          }
           db.close();
         } catch(e) {
           try { db.close(); } catch(ex) {}
@@ -234,4 +242,73 @@ function findSocketByUserId(io, userId) {
   return null;
 }
 
-module.exports = { setupWar };
+// === REST API endpoints for war records ===
+
+// Overall war records for all players
+router.get('/records', requireAuth, (req, res) => {
+  const db = getDb();
+  try {
+    const records = db.prepare(`
+      SELECT u.id as userId, u.username,
+        COALESCE(w.wins, 0) as wins,
+        COALESCE(l.losses, 0) as losses,
+        COALESCE(d.draws, 0) as draws
+      FROM users u
+      LEFT JOIN (
+        SELECT winner_id, COUNT(*) as wins FROM war_results WHERE winner_id IS NOT NULL AND is_draw = 0 GROUP BY winner_id
+      ) w ON u.id = w.winner_id
+      LEFT JOIN (
+        SELECT loser_id, COUNT(*) as losses FROM (
+          SELECT CASE WHEN winner_id = player1_id THEN player2_id ELSE player1_id END as loser_id
+          FROM war_results WHERE winner_id IS NOT NULL AND is_draw = 0
+        ) GROUP BY loser_id
+      ) l ON u.id = l.loser_id
+      LEFT JOIN (
+        SELECT player_id, COUNT(*) as draws FROM (
+          SELECT player1_id as player_id FROM war_results WHERE is_draw = 1
+          UNION ALL
+          SELECT player2_id as player_id FROM war_results WHERE is_draw = 1
+        ) GROUP BY player_id
+      ) d ON u.id = d.player_id
+      WHERE u.is_superadmin = 0 AND u.banned = 0
+        AND (COALESCE(w.wins, 0) + COALESCE(l.losses, 0) + COALESCE(d.draws, 0)) > 0
+      ORDER BY wins DESC, losses ASC
+    `).all();
+    res.json(records);
+  } finally {
+    db.close();
+  }
+});
+
+// Head-to-head record between current user and another player
+router.get('/h2h/:opponentId', requireAuth, (req, res) => {
+  const opponentId = parseInt(req.params.opponentId);
+  const userId = req.session.userId;
+  if (!opponentId || opponentId === userId) {
+    return res.json({ wins: 0, losses: 0, draws: 0 });
+  }
+
+  const db = getDb();
+  try {
+    const wins = db.prepare(`
+      SELECT COUNT(*) as c FROM war_results
+      WHERE winner_id = ? AND ((player1_id = ? AND player2_id = ?) OR (player1_id = ? AND player2_id = ?))
+    `).get(userId, userId, opponentId, opponentId, userId).c;
+
+    const losses = db.prepare(`
+      SELECT COUNT(*) as c FROM war_results
+      WHERE winner_id = ? AND ((player1_id = ? AND player2_id = ?) OR (player1_id = ? AND player2_id = ?))
+    `).get(opponentId, userId, opponentId, opponentId, userId).c;
+
+    const draws = db.prepare(`
+      SELECT COUNT(*) as c FROM war_results
+      WHERE is_draw = 1 AND ((player1_id = ? AND player2_id = ?) OR (player1_id = ? AND player2_id = ?))
+    `).get(userId, opponentId, opponentId, userId).c;
+
+    res.json({ wins, losses, draws });
+  } finally {
+    db.close();
+  }
+});
+
+module.exports = { setupWar, warRouter: router };
